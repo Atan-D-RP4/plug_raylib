@@ -5,15 +5,16 @@
 void build_plug(Nob_Cmd *cmd);
 void build_game(Nob_Cmd *cmd);
 
-
 const char *compile_cmd = "gcc";
 const char *source_file = "main.c";
 const char *out_file = "main";
 const char *plug_file = "plug.c";
 const char *plug_out_file = "libplug.so";
-const char *CFLAGS = "-Wall -std=c2x -pedantic -ggdb -Wextra -Wno-missing-braces -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-label -Wno-unused-but-set-variable";
+const char *CFLAGS = "-Wall -std=c2x -ggdb -Wextra -Wno-missing-braces -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-label -Wno-unused-but-set-variable";
 const char *LDFLAGS = "./raylib/lib/libraylib.so.5.0.0 -lm";
 const char *PLUGFLAGS = "-fPIC -shared";
+
+bool hot_reloadable = true;
 
 int main(int argc, char **argv) {
 	NOB_GO_REBUILD_URSELF(argc, argv);
@@ -48,7 +49,7 @@ int main(int argc, char **argv) {
 		} else if (strcmp(subcmd, "clean") == 0) {
 
 			cmd.count = 0;
-			nob_cmd_append(&cmd, "rm", out_file, "nob", "nob.old");
+			nob_cmd_append(&cmd, "rm", out_file, plug_out_file, "nob", "nob.old");
 			if (!nob_cmd_run_sync(cmd)) return 1;
 			return 0;
 
@@ -78,6 +79,11 @@ void build_game(Nob_Cmd *cmd) {
 		nob_cmd_append(cmd, flag_temp);
 	}
 
+	if (hot_reloadable) {
+		nob_cmd_append(cmd, "-DHOT_RELOADABLE");
+	} else {
+		nob_cmd_append(cmd, plug_file);
+	}
 	nob_cmd_append(cmd, source_file);
 
 	nob_cmd_append(cmd, "-o", out_file);

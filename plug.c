@@ -1,5 +1,7 @@
 #include "include/plug.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <time.h>
 
@@ -7,52 +9,119 @@
 #include "raylib/include/raymath.h"
 #include "raylib/include/rlgl.h"
 
+int count_alive_neighbours(Cell **cells, int x, int y, int rows, int cols) {
+	int count = 0;
+	for (int i = -1; i < 2; i++) {
+		for (int j = -1; j < 2; j++) {
+			if (i == 0 && j == 0) continue;
+			int nx = x + i, ny = y + j;
+			if (nx >= 0 && nx < rows && ny >= 0 && ny < cols && cells[nx][ny].status == ALIVE)
+				count++;
+		}
+	}
+	return count;
+}
+
+void update_cells(Plug *plug) {
+	// update cells
+	bool temp[plug->cols][plug->rows];
+	for (size_t i = 0; i < plug->cols; ++i) {
+		for (size_t j = 0; j < plug->rows; ++j) {
+			temp[i][j] = plug->cells[i][j].status;
+		}
+	}
+
+	for (size_t i = 0; i < plug->cols; ++i) {
+		for (size_t j = 0; j < plug->rows; ++j) {
+			int alive = count_alive_neighbours(plug->cells, i, j, plug->rows, plug->cols);
+			if (temp[i][j] == ALIVE) {
+				if (alive < 2 || alive > 3) {
+					plug->cells[i][j].status = DEAD;
+				}
+			} else {
+				if (alive == 3) {
+					plug->cells[i][j].status = ALIVE;
+				}
+			}
+		}
+	}
+}
+
+void DrawFrame(Plug *plug) {
+	int cellWidth = plug->windowWidth / plug->cols;
+	int cellHeight = plug->windowHeight / plug->rows;
+
+	for (int i = 0; i < plug->cols; i++) {
+		for (int j = 0; j < plug->rows; j++) {
+			if (plug->cells[i][j].status == ALIVE)
+				DrawRectangle(i * cellWidth, j * cellHeight,
+						cellWidth, cellHeight, YELLOW);
+			DrawRectangleLines(i * cellWidth, j * cellHeight,
+					cellWidth, cellHeight, BLACK);
+		}
+	}
+}
+
 void plug_hello() {
 	printf("\rHello from pluggin\n");
 }
 
-void plug_init(Plug *plug, Cell **cells, int rows, int cols, int windowWidth, int windowHeight) {
+void plug_init(Plug *plug, Cell **cells, int rows, int cols) {
 	plug->cells = cells;
 	plug->rows = rows;
 	plug->cols = cols;
 
-	int	cellWidth = windowWidth / cols;
-	int cellHeight = windowHeight / rows;
-
-	printf("Plug->Grid: %d x %d\n", plug->cols, plug->rows);
-		ClearBackground(RAYWHITE);
-		for (int i = 0; i < cols; i++) {
-			for (int j = 0; j < rows; j++) {
-				DrawRectangleLines(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, BLACK);
-				cells[i][j].x = i;
-				cells[i][j].y = j;
-				cells[i][j].status = DEAD;
-			}
-		}
+	plug->windowWidth = GetScreenWidth();
+	plug->windowHeight = GetScreenHeight();
+	plug->playing = false;
 }
 
 void plug_update(Plug *plug) {
+	BeginDrawing();
+
+	ClearBackground(RAYWHITE);
 
 	int cellWidth = plug->windowWidth / plug->cols;
 	int cellHeight = plug->windowHeight / plug->rows;
-	BeginDrawing();
-		if (IsKeyPressed(MOUSE_LEFT_BUTTON)) {
-			int x = GetMouseX() / plug->windowWidth/ plug->cols;
-			int y = GetMouseY() / plug->windowHeight / plug->rows;
-			plug->cells[x][y].status = !plug->cells[x][y].status;
-		}
+
+	if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+		int x = GetMouseX() / cellWidth;
+		int y = GetMouseY() / cellHeight;
+		plug->cells[x][y].status = !plug->cells[x][y].status;
+	}
+
+	if (IsKeyPressed(KEY_SPACE)) {
+		plug->playing = !plug->playing;
+	}
+
+	if (IsKeyPressed(KEY_C)) {
 		for (int i = 0; i < plug->cols; i++) {
 			for (int j = 0; j < plug->rows; j++) {
-				DrawRectangleLines(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, BLACK);
-				plug->cells[i][j].x = i;
-				plug->cells[i][j].y = j;
-				if (plug->cells[i][j].status == ALIVE) {
-					DrawRectangle(i * cellWidth, j * cellHeight,
-							cellWidth, cellHeight, YELLOW);
-				}
+				plug->cells[i][j].status = DEAD;
 			}
 		}
+	}
+
+	DrawFrame(plug);
+
+	if (!plug->playing) {
+		EndDrawing();
+		return;
+	}
+
+	update_cells(plug);
+
 	EndDrawing();
 }
+
+void plug_pre_load(Plug *plug) {
+	printf("\nPlug pre load\n");
+	// some deinitalization
+}
+
+void plug_post_load(Plug *plug) {
+	printf("Plug loaded\n");
+	// reinitialization
+}
+
+
