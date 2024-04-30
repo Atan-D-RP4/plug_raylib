@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #define NOB_IMPLEMENTATION
 #include "include/nob.h"
@@ -18,6 +19,8 @@ bool hot_reloadable = true;
 
 int main(int argc, char **argv) {
 	NOB_GO_REBUILD_URSELF(argc, argv);
+
+	setenv("LD_LIBRARY_PATH", "raylib/lib/", 1);
 
 	const char *program = nob_shift_args(&argc, &argv);
 
