@@ -9,13 +9,13 @@
 #include "raylib/include/raymath.h"
 #include "raylib/include/rlgl.h"
 
-int count_alive_neighbours(Cell **cells, int x, int y, int rows, int cols) {
+int count_alive_neighbours(bool **cells, int x, int y, int rows, int cols) {
 	int count = 0;
 	for (int i = -1; i < 2; i++) {
 		for (int j = -1; j < 2; j++) {
 			if (i == 0 && j == 0) continue;
 			int nx = x + i, ny = y + j;
-			if (nx >= 0 && nx < rows && ny >= 0 && ny < cols && cells[nx][ny].status == ALIVE)
+			if (nx >= 0 && nx < rows && ny >= 0 && ny < cols && cells[nx][ny] == ALIVE)
 				count++;
 		}
 	}
@@ -24,8 +24,9 @@ int count_alive_neighbours(Cell **cells, int x, int y, int rows, int cols) {
 
 void update_cells(Plug *plug) {
 	// update cells
-	bool temp[plug->cols][plug->rows];
+	bool **temp = (bool **)malloc(plug->cols * sizeof(bool *));
 	for (size_t i = 0; i < plug->cols; ++i) {
+		temp[i] = (bool *)malloc(plug->rows * sizeof(bool));
 		for (size_t j = 0; j < plug->rows; ++j) {
 			temp[i][j] = plug->cells[i][j].status;
 		}
@@ -33,7 +34,7 @@ void update_cells(Plug *plug) {
 
 	for (size_t i = 0; i < plug->cols; ++i) {
 		for (size_t j = 0; j < plug->rows; ++j) {
-			int alive = count_alive_neighbours(plug->cells, i, j, plug->rows, plug->cols);
+			int alive = count_alive_neighbours(temp, i, j, plug->rows, plug->cols);
 			if (temp[i][j] == ALIVE) {
 				if (alive < 2 || alive > 3) {
 					plug->cells[i][j].status = DEAD;
@@ -98,6 +99,14 @@ void plug_update(Plug *plug) {
 		for (int i = 0; i < plug->cols; i++) {
 			for (int j = 0; j < plug->rows; j++) {
 				plug->cells[i][j].status = DEAD;
+			}
+		}
+	}
+
+	if (IsKeyPressed(KEY_G)) {
+		for (int i = 0; i < plug->cols; i++) {
+			for (int j = 0; j < plug->rows; j++) {
+				plug->cells[i][j].status = rand() % 2;
 			}
 		}
 	}

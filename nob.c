@@ -23,12 +23,12 @@ int main(int argc, char **argv) {
 
 	Nob_Cmd cmd = { 0 };
 
-	build_plug(&cmd);
 
 	if (argc > 0) {
 		const char* subcmd = nob_shift_args(&argc, &argv);
 		if (strcmp(subcmd, "run") == 0) {
 
+			build_plug(&cmd);
 			build_game(&cmd);
 
 			cmd.count = 0;
@@ -45,6 +45,8 @@ int main(int argc, char **argv) {
 			if (!nob_cmd_run_sync(cmd)) return 1;
 
 			return 0;
+		} else if (strcmp(subcmd, "reload") == 0) {
+			build_plug(&cmd);
 
 		} else if (strcmp(subcmd, "clean") == 0) {
 
@@ -58,6 +60,7 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 	} else {
+		build_plug(&cmd);
 		build_game(&cmd);
 	}
 

@@ -12,8 +12,8 @@
 
 #define COLOR_ALIVE = YELLOW;
 
-const int GRID_COLS = 50;
 const int GRID_ROWS = 50;
+const int GRID_COLS = 50;
 
 const int windowWidth = 1000;
 const int windowHeight = 1000;
@@ -80,7 +80,7 @@ int main() {
 
 	InitWindow(windowWidth, windowHeight, "Game Of Life");
 	SetWindowTitle("Game Of Life");
-	SetTargetFPS(10);
+	SetTargetFPS(12);
 	init_grid(grid, GRID_COLS, GRID_ROWS);
 
 	plug_init(&plug, grid, GRID_COLS, GRID_ROWS);
