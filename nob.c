@@ -12,7 +12,7 @@ const char *out_file = "main";
 const char *plug_file = "plug.c";
 const char *plug_out_file = "libplug.so";
 const char *CFLAGS = "-Wall -std=c2x -ggdb -Wextra -Wno-missing-braces -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-label -Wno-unused-but-set-variable";
-const char *LDFLAGS = "./raylib/lib/libraylib.so.5.0.0 -lm";
+const char *LDFLAGS = "-I./raylib/include/ ./raylib/lib/libraylib.so.5.0.0 -lm";
 const char *PLUGFLAGS = "-fPIC -shared";
 
 bool hot_reloadable = true;
@@ -20,53 +20,57 @@ bool hot_reloadable = true;
 int main(int argc, char **argv) {
 	NOB_GO_REBUILD_URSELF(argc, argv);
 
-	setenv("LD_LIBRARY_PATH", "raylib/lib/", 1);
-
 	const char *program = nob_shift_args(&argc, &argv);
 
 	Nob_Cmd cmd = { 0 };
 
+	if (argc <= 0) {
 
-	if (argc > 0) {
-		const char* subcmd = nob_shift_args(&argc, &argv);
-		if (strcmp(subcmd, "run") == 0) {
-
-			build_plug(&cmd);
-			build_game(&cmd);
-
-			cmd.count = 0;
-			Nob_String_Builder run_cmd = { 0 };
-			nob_sb_append_cstr(&run_cmd, "./");
-			nob_sb_append_cstr(&run_cmd, out_file);
-			nob_cmd_append(&cmd, run_cmd.items);
-			nob_da_append_many(&cmd, argv, argc);
-			if (!nob_cmd_run_sync(cmd)) return 1;
-			nob_sb_free(run_cmd);
-
-			cmd.count = 0;
-			nob_cmd_append(&cmd, "rm", out_file);
-			if (!nob_cmd_run_sync(cmd)) return 1;
-
-			return 0;
-		} else if (strcmp(subcmd, "reload") == 0) {
-			build_plug(&cmd);
-
-		} else if (strcmp(subcmd, "clean") == 0) {
-
-			cmd.count = 0;
-			nob_cmd_append(&cmd, "rm", out_file, plug_out_file, "nob", "nob.old");
-			if (!nob_cmd_run_sync(cmd)) return 1;
-			return 0;
-
-		} else {
-			nob_log(NOB_ERROR, "Unknown subcommand: %s\n", subcmd);
-			return 1;
-		}
-	} else {
 		build_plug(&cmd);
 		build_game(&cmd);
+		nob_log(NOB_INFO, "Built plug and game");
+
+		return 0;
 	}
 
+	const char* subcmd = nob_shift_args(&argc, &argv);
+	if (strcmp(subcmd, "run") == 0) {
+
+		build_plug(&cmd);
+		build_game(&cmd);
+
+		setenv("LD_LIBRARY_PATH", "raylib/lib/", 1);
+
+		cmd.count = 0;
+		Nob_String_Builder run_cmd = { 0 };
+		nob_sb_append_cstr(&run_cmd, "./");
+		nob_sb_append_cstr(&run_cmd, out_file);
+		nob_cmd_append(&cmd, run_cmd.items);
+		nob_da_append_many(&cmd, argv, argc);
+		if (!nob_cmd_run_sync(cmd)) return 1;
+		nob_sb_free(run_cmd);
+
+		cmd.count = 0;
+		nob_cmd_append(&cmd, "rm", out_file);
+
+		if (!nob_cmd_run_sync(cmd)) return 1;
+
+		return 0;
+
+	} else if (strcmp(subcmd, "reload") == 0) {
+		build_plug(&cmd);
+
+	} else if (strcmp(subcmd, "clean") == 0) {
+
+		cmd.count = 0;
+		nob_cmd_append(&cmd, "rm", out_file, plug_out_file, "nob", "nob.old");
+		if (!nob_cmd_run_sync(cmd)) return 1;
+		return 0;
+
+	} else {
+		nob_log(NOB_ERROR, "Unknown subcommand: %s\n", subcmd);
+		return 1;
+	}
 
 	return 0;
 }

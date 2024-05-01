@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <time.h>
 
-#include "raylib/include/raylib.h"
-#include "raylib/include/raymath.h"
-#include "raylib/include/rlgl.h"
+#include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
 
 #include "include/plug.h"
 

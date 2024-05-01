@@ -5,9 +5,9 @@
 #include <math.h>
 #include <time.h>
 
-#include "raylib/include/raylib.h"
-#include "raylib/include/raymath.h"
-#include "raylib/include/rlgl.h"
+#include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
 
 int count_alive_neighbours(bool **cells, int x, int y, int rows, int cols) {
 	int count = 0;
