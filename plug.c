@@ -48,6 +48,32 @@ void update_cells(Plug *plug) {
 	}
 }
 
+void create_pulsar(Plug *plug){
+	// create a pulsar in the grid
+	int x = plug->cols / 2;
+	int y = plug->rows / 2;
+	for (int i = -2; i < 3; i++) {
+		plug->cells[x + i][y - 2].status = ALIVE;
+		plug->cells[x + i][y + 2].status = ALIVE;
+		plug->cells[x - 2][y + i].status = ALIVE;
+		plug->cells[x + 2][y + i].status = ALIVE;
+	}
+}
+
+void create_gun(Plug *plug) {
+	// create a gun in the grid
+	int x = plug->cols / 2;
+	int y = plug->rows / 2;
+	for (int i = -4; i < 4; i++) {
+		plug->cells[x + i][y - 1].status = ALIVE;
+		plug->cells[x + i][y + 1].status = ALIVE;
+	}
+	plug->cells[x - 4][y].status = ALIVE;
+	plug->cells[x + 4][y].status = ALIVE;
+	plug->cells[x - 5][y + 1].status = ALIVE;
+	plug->cells[x + 5][y + 1].status = ALIVE;
+}
+
 void DrawFrame(Plug *plug) {
 	int cellWidth = plug->windowWidth / plug->cols;
 	int cellHeight = plug->windowHeight / plug->rows;
@@ -79,6 +105,7 @@ void plug_init(Plug *plug, Cell **cells, int rows, int cols) {
 
 void plug_update(Plug *plug) {
 	BeginDrawing();
+	srand(time(NULL));
 
 	ClearBackground(RAYWHITE);
 
@@ -103,12 +130,24 @@ void plug_update(Plug *plug) {
 		}
 	}
 
+	if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_C)) {
+		system("clear");
+	}
+
 	if (IsKeyPressed(KEY_G)) {
 		for (int i = 0; i < plug->cols; i++) {
 			for (int j = 0; j < plug->rows; j++) {
 				plug->cells[i][j].status = rand() % 2;
 			}
 		}
+	}
+
+	if (IsKeyPressed(KEY_P)) {
+		create_pulsar(plug);
+	}
+
+	if (IsKeyPressed(KEY_W)) {
+		create_gun(plug);
 	}
 
 	DrawFrame(plug);

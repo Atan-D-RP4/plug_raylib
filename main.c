@@ -81,6 +81,8 @@ int main() {
 	InitWindow(windowWidth, windowHeight, "Game Of Life");
 	SetWindowTitle("Game Of Life");
 	SetTargetFPS(12);
+	// Close, minimize. maximize buttons
+
 	init_grid(grid, GRID_COLS, GRID_ROWS);
 
 	plug_init(&plug, grid, GRID_COLS, GRID_ROWS);

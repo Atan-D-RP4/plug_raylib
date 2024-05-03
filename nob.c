@@ -12,7 +12,7 @@ const char *out_file = "main";
 const char *plug_file = "plug.c";
 const char *plug_out_file = "libplug.so";
 const char *CFLAGS = "-Wall -std=c2x -ggdb -Wextra -Wno-missing-braces -Wno-missing-field-initializers -Wno-unused-parameter -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unused-label -Wno-unused-but-set-variable";
-const char *LDFLAGS = "-I./raylib/include/ ./raylib/lib/libraylib.so.5.0.0 -lm";
+const char *LDFLAGS = "-I./raylib/include/ ./raylib/lib/libraylib.so.5.0.0 -lm -Wl,-rpath=./raylib/lib";
 const char *PLUGFLAGS = "-fPIC -shared";
 
 bool hot_reloadable = true;
@@ -38,8 +38,6 @@ int main(int argc, char **argv) {
 
 		build_plug(&cmd);
 		build_game(&cmd);
-
-		setenv("LD_LIBRARY_PATH", "raylib/lib/", 1);
 
 		cmd.count = 0;
 		Nob_String_Builder run_cmd = { 0 };
