@@ -9,6 +9,9 @@
 #include "raymath.h"
 #include "rlgl.h"
 
+#define GRID_COLS 50
+#define GRID_ROWS 50
+
 int count_alive_neighbours(bool **cells, int x, int y, int rows, int cols) {
 	int count = 0;
 	for (int i = -1; i < 2; i++) {
@@ -62,8 +65,8 @@ void create_pulsar(Plug *plug){
 
 void create_gun(Plug *plug) {
 	// create a gun in the grid
-	int x = plug->cols / 2;
-	int y = plug->rows / 2;
+	int x = (plug->cols / 2) - 10;
+	int y = (plug->rows / 2) - 10;
 	for (int i = -4; i < 4; i++) {
 		plug->cells[x + i][y - 1].status = ALIVE;
 		plug->cells[x + i][y + 1].status = ALIVE;
@@ -72,6 +75,25 @@ void create_gun(Plug *plug) {
 	plug->cells[x + 4][y].status = ALIVE;
 	plug->cells[x - 5][y + 1].status = ALIVE;
 	plug->cells[x + 5][y + 1].status = ALIVE;
+	plug->cells[x - 6][y + 2].status = ALIVE;
+	plug->cells[x + 6][y + 2].status = ALIVE;
+	plug->cells[x - 7][y + 3].status = ALIVE;
+	plug->cells[x + 7][y + 3].status = ALIVE;
+	plug->cells[x - 7][y - 3].status = ALIVE;
+	plug->cells[x + 7][y - 3].status = ALIVE;
+	plug->cells[x - 6][y - 4].status = ALIVE;
+	plug->cells[x + 6][y - 4].status = ALIVE;
+	plug->cells[x - 5][y - 5].status = ALIVE;
+	plug->cells[x + 5][y - 5].status = ALIVE;
+	plug->cells[x - 4][y - 6].status = ALIVE;
+	plug->cells[x + 4][y - 6].status = ALIVE;
+	plug->cells[x - 3][y - 6].status = ALIVE;
+	plug->cells[x + 3][y - 6].status = ALIVE;
+	plug->cells[x - 2][y - 6].status = ALIVE;
+	plug->cells[x + 2][y - 6].status = ALIVE;
+	plug->cells[x - 1][y - 6].status = ALIVE;
+	plug->cells[x + 1][y - 6].status = ALIVE;
+	plug->cells[x][y - 6].status = ALIVE;
 }
 
 void DrawFrame(Plug *plug) {
@@ -89,18 +111,22 @@ void DrawFrame(Plug *plug) {
 	}
 }
 
-void plug_hello() {
-	printf("\rHello from pluggin\n");
-}
+void *plug_init(void) {
+	Plug *plug = (Plug *) malloc(sizeof(Plug));
+	Cell **grid = (Cell **) calloc(GRID_COLS, sizeof(Cell *));
+	for (int i = 0; i < GRID_COLS; i++) {
+		grid[i] = (Cell *) malloc(GRID_ROWS * sizeof(Cell));
+	}
 
-void plug_init(Plug *plug, Cell **cells, int rows, int cols) {
-	plug->cells = cells;
-	plug->rows = rows;
-	plug->cols = cols;
+	plug->cells = grid;
+	plug->rows = GRID_ROWS;
+	plug->cols = GRID_COLS;
 
 	plug->windowWidth = GetScreenWidth();
 	plug->windowHeight = GetScreenHeight();
 	plug->playing = false;
+
+	return plug;
 }
 
 void plug_update(Plug *plug) {
@@ -142,7 +168,7 @@ void plug_update(Plug *plug) {
 		}
 	}
 
-	if (IsKeyPressed(KEY_P)) {
+	if (IsKeyDown(KEY_P)) {
 		create_pulsar(plug);
 	}
 

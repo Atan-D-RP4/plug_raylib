@@ -2,3 +2,4 @@ CompileFlags:
 	Add:
 		- "-I./raylib/include"
 		- "-I./include"
+		- "-DHOT_RELOADABLE"
