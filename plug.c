@@ -107,43 +107,6 @@ void DrawFrame(Plug *plug) {
 	}
 }
 
-void plug_init(void) {
-	Plug *init = (Plug *) malloc(sizeof(Plug));
-	Cell **grid = (Cell **) calloc(GRID_COLS, sizeof(Cell *));
-	for (int i = 0; i < GRID_COLS; i++) {
-		grid[i] = (Cell *) malloc(GRID_ROWS * sizeof(Cell));
-	}
-
-	init->cells = grid;
-	init->rows = GRID_ROWS;
-	init->cols = GRID_COLS;
-
-	init->windowWidth = GetScreenWidth();
-	init->windowHeight = GetScreenHeight();
-	init->playing = false;
-
-	plug = init;
-	fprintf(stdout, "INFO: Plug initialized\n");
-
-	BeginDrawing();
-		ClearBackground(RAYWHITE);
-		int cellWidth = GetScreenWidth() / init->cols;
-		int cellHeight = GetScreenHeight() / init->rows;
-		for (int i = 0; i < init->cols; i++) {
-			for (int j = 0; j < init->rows; j++) {
-				DrawRectangle(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, RAYWHITE);
-				DrawRectangleLines(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, BLACK);
-				init->cells[i][j].x = i;
-				init->cells[i][j].y = j;
-				init->cells[i][j].status_next = DEAD;
-			}
-		}
-	EndDrawing();
-
-}
-
 void plug_update() {
 	BeginDrawing();
 	srand(time(NULL));
@@ -203,6 +166,42 @@ void plug_update() {
 	EndDrawing();
 }
 
+void plug_init(void) {
+	Plug *init = (Plug *) malloc(sizeof(Plug));
+	Cell **grid = (Cell **) calloc(GRID_COLS, sizeof(Cell *));
+	for (int i = 0; i < GRID_COLS; i++) {
+		grid[i] = (Cell *) malloc(GRID_ROWS * sizeof(Cell));
+	}
+
+	init->cells = grid;
+	init->rows = GRID_ROWS;
+	init->cols = GRID_COLS;
+
+	init->windowWidth = GetScreenWidth();
+	init->windowHeight = GetScreenHeight();
+	init->playing = false;
+
+	plug = init;
+	fprintf(stdout, "INFO: Plug initialized\n");
+
+	BeginDrawing();
+		ClearBackground(RAYWHITE);
+		int cellWidth = GetScreenWidth() / init->cols;
+		int cellHeight = GetScreenHeight() / init->rows;
+		for (int i = 0; i < init->cols; i++) {
+			for (int j = 0; j < init->rows; j++) {
+				DrawRectangle(i * cellWidth, j * cellHeight,
+						cellWidth, cellHeight, RAYWHITE);
+				DrawRectangleLines(i * cellWidth, j * cellHeight,
+						cellWidth, cellHeight, BLACK);
+				init->cells[i][j].status_next = DEAD;
+			}
+		}
+	EndDrawing();
+	printf(	"Plug initialized with %d rows and %d cols\n", init->rows, init->cols);
+
+}
+
 void *plug_pre_load(void) {
 	fprintf(stdout, "INFO: Plug Pre-Load\n");
 	// some deinitalization
@@ -221,15 +220,12 @@ void *plug_pre_load(void) {
 
 	for (int i = 0; i < plug->cols; i++) {
 		for (int j = 0; j < plug->rows; j++) {
-			copy->cells[i][j].x = plug->cells[i][j].x;
-			copy->cells[i][j].y = plug->cells[i][j].y;
 			copy->cells[i][j].status_next = plug->cells[i][j].status_next;
 			copy->cells[i][j].status_prev = plug->cells[i][j].status_prev;
-			printf("\r[%d][%d] = %d", i, j, copy->cells[i][j].status_next);
 		}
 	}
 
-	for (int i = 0; i < GRID_COLS; i++) {
+	for (int i = 0; i < plug->cols; i++) {
 		free(plug->cells[i]);
 	}
 	free(plug->cells);
@@ -248,11 +244,29 @@ void *plug_pre_load(void) {
 void plug_post_load(void *state) {
 	fprintf(stdout, "INFO: Plug Post-Load\n");
 	// reinitialization
-	if (state != NULL) {
-		plug = (Plug *) state;
-		return;
-	} else {
-		plug_init();
+	Plug *cpy = (Plug *) state;
+	plug_init();
+
+	plug->playing = cpy->playing;
+	printf("cpy: %p -> [%d] [%d]\n", cpy, cpy->rows, cpy->cols);
+	printf("plug: %p -> [%d] [%d]\n", plug, plug->rows, plug->cols);
+	printf("playing: %d\n", plug->playing);
+
+	for (int i = 0; i < cpy->cols; i++) {
+		for (int j = 0; j < cpy->rows; j++) {
+			if (i >= plug->cols || j >= plug->rows) {
+				break;
+			}
+			plug->cells[i][j].status_next = cpy->cells[i][j].status_next;
+			plug->cells[i][j].status_prev = cpy->cells[i][j].status_prev;
+		}
+		printf("\n");
+		printf("\rfreeing %d", i);
+		free(cpy->cells[i]);
 	}
+	printf("\n");
+	free(cpy->cells);
+	free(cpy);
 	printf("plug: %p\n", plug);
+	printf("cpy: %p\n", cpy);
 }

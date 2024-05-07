@@ -1,8 +1,8 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#define GRID_COLS 50
-#define GRID_ROWS 50
+#define GRID_COLS 25
+#define GRID_ROWS 25
 
 #define COLOR_ALIVE = YELLOW;
 
@@ -15,8 +15,6 @@ typedef enum {
 }Status;
 
 typedef struct {
-	int x;
-	int y;
 	Status status_prev;
 	Status status_next;
 } Cell;
