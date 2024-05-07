@@ -99,7 +99,7 @@ void DrawFrame(Plug *plug) {
 		for (int j = 0; j < plug->rows; j++) {
 			if (plug->cells[i][j].status_next == ALIVE)
 				DrawRectangle(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, RED);
+						cellWidth, cellHeight, BLUE);
 			DrawRectangleLines(i * cellWidth, j * cellHeight,
 					cellWidth, cellHeight, BLACK);
 			plug->cells[i][j].status_prev = plug->cells[i][j].status_next;
