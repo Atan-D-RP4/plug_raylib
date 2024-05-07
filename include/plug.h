@@ -3,35 +3,16 @@
 
 #include <stdbool.h>
 
-typedef enum {
-	DEAD,
-	ALIVE
-}Status;
-
-typedef struct {
-	int x;
-	int y;
-	Status status;
-} Cell;
-
-typedef struct {
-	Cell **cells;
-	int rows;
-	int cols;
-	int windowWidth;
-	int windowHeight;
-	bool playing;
-} Plug;
-
 #define PLUGS_LIST 		\
 	PLUG(plug_init, void*, void) 	\
 	PLUG(plug_update, void, void*)	\
-	PLUG(plug_pre_load, void, void*) \
+	PLUG(plug_pre_load, void*, void) \
 	PLUG(plug_post_load, void, void*) \
 
 #define PLUG(name, ret, ...) typedef ret (name##_t)(__VA_ARGS__);
 PLUGS_LIST
 #undef PLUG
+#endif // PLUG_H_
 
 #ifdef PLUG_IMPLEMENTATION
 const char *libplug_file_name = "./libplug.so";
@@ -80,5 +61,3 @@ void *libplug = NULL;
 #endif // HOT_RELOADABLE
 
 #endif // PLUG_IMPLEMENTATION
-
-#endif // PLUG_H_

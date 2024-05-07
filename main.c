@@ -9,7 +9,8 @@
 #include "rlgl.h"
 
 #define PLUG_IMPLEMENTATION
-#include "include/plug.h" 
+#include "include/plug.h"
+#include "include/cell.h"
 
 void init_grid(Cell **cells, int cols, int rows);
 
@@ -31,13 +32,11 @@ int main() {
 	init_grid(plug->cells, plug->cols, plug->rows);
 
 	while (!WindowShouldClose()) {
-#ifdef HOT_RELOADABLE
 		if (IsKeyPressed(KEY_R)) {
-			plug_pre_load(plug);
+			void *state = plug_pre_load();
 			if (!reload_libplug()) return 1;
-			plug_post_load(plug);
+			plug_post_load(state);
 		}
-#endif
 		plug_update((void *) plug);
 	}
 
@@ -54,7 +53,7 @@ void init_grid(Cell **cells, int cols, int rows) {
 		for (int i = 0; i < cols; i++) {
 			for (int j = 0; j < rows; j++) {
 				DrawRectangle(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, YELLOW);
+						cellWidth, cellHeight, RAYWHITE);
 				DrawRectangleLines(i * cellWidth, j * cellHeight,
 						cellWidth, cellHeight, BLACK);
 				cells[i][j].x = i;
@@ -62,6 +61,5 @@ void init_grid(Cell **cells, int cols, int rows) {
 				cells[i][j].status = DEAD;
 			}
 		}
-		fprintf(stdout, "INFO: Plug initialized\n");
 	EndDrawing();
 }

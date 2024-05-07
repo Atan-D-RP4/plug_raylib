@@ -1,4 +1,5 @@
 #include "include/plug.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,8 +10,7 @@
 #include "raymath.h"
 #include "rlgl.h"
 
-#define GRID_COLS 50
-#define GRID_ROWS 50
+#include "include/cell.h"
 
 int count_alive_neighbours(bool **cells, int x, int y, int rows, int cols) {
 	int count = 0;
@@ -28,15 +28,15 @@ int count_alive_neighbours(bool **cells, int x, int y, int rows, int cols) {
 void update_cells(Plug *plug) {
 	// update cells
 	bool **temp = (bool **)malloc(plug->cols * sizeof(bool *));
-	for (size_t i = 0; i < plug->cols; ++i) {
+	for (int i = 0; i < plug->cols; ++i) {
 		temp[i] = (bool *)malloc(plug->rows * sizeof(bool));
-		for (size_t j = 0; j < plug->rows; ++j) {
+		for (int j = 0; j < plug->rows; ++j) {
 			temp[i][j] = plug->cells[i][j].status;
 		}
 	}
 
-	for (size_t i = 0; i < plug->cols; ++i) {
-		for (size_t j = 0; j < plug->rows; ++j) {
+	for (int i = 0; i < plug->cols; ++i) {
+		for (int j = 0; j < plug->rows; ++j) {
 			int alive = count_alive_neighbours(temp, i, j, plug->rows, plug->cols);
 			if (temp[i][j] == ALIVE) {
 				if (alive < 2 || alive > 3) {
@@ -104,7 +104,7 @@ void DrawFrame(Plug *plug) {
 		for (int j = 0; j < plug->rows; j++) {
 			if (plug->cells[i][j].status == ALIVE)
 				DrawRectangle(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, YELLOW);
+						cellWidth, cellHeight, BLUE);
 			DrawRectangleLines(i * cellWidth, j * cellHeight,
 					cellWidth, cellHeight, BLACK);
 		}
@@ -126,10 +126,13 @@ void *plug_init(void) {
 	plug->windowHeight = GetScreenHeight();
 	plug->playing = false;
 
+	fprintf(stdout, "INFO: Plug initialized\n");
+
 	return plug;
 }
 
-void plug_update(Plug *plug) {
+void plug_update(void *state) {
+	Plug *plug = (Plug *) state;
 	BeginDrawing();
 	srand(time(NULL));
 
@@ -188,13 +191,14 @@ void plug_update(Plug *plug) {
 	EndDrawing();
 }
 
-void plug_pre_load(Plug *plug) {
-	printf("\nPlug pre load\n");
+void *plug_pre_load(void) {
+	fprintf(stdout, "INFO: Plug Pre-Load\n");
 	// some deinitalization
+	return NULL;
 }
 
-void plug_post_load(Plug *plug) {
-	printf("Plug loaded\n");
+void plug_post_load(void *state) {
+	fprintf(stdout, "INFO: Plug Post-Load\n");
 	// reinitialization
 }
 
