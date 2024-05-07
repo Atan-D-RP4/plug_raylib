@@ -4,6 +4,11 @@
 #define GRID_COLS 50
 #define GRID_ROWS 50
 
+#define COLOR_ALIVE = YELLOW;
+
+#define ScreenWidth 1000
+#define ScreenHeight 1000
+
 typedef enum {
 	DEAD,
 	ALIVE
@@ -12,7 +17,8 @@ typedef enum {
 typedef struct {
 	int x;
 	int y;
-	Status status;
+	Status status_prev;
+	Status status_next;
 } Cell;
 
 typedef struct {

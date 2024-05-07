@@ -4,8 +4,8 @@
 #include <stdbool.h>
 
 #define PLUGS_LIST 		\
-	PLUG(plug_init, void*, void) 	\
-	PLUG(plug_update, void, void*)	\
+	PLUG(plug_init, void, void) 	\
+	PLUG(plug_update, void, void)	\
 	PLUG(plug_pre_load, void*, void) \
 	PLUG(plug_post_load, void, void*) \
 

@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "raylib.h"
 #include "raymath.h"
@@ -12,13 +13,15 @@
 
 #include "include/cell.h"
 
-int count_alive_neighbours(bool **cells, int x, int y, int rows, int cols) {
+Plug *plug = NULL;
+
+int count_alive_neighbours(Cell **cells, int x, int y, int rows, int cols) {
 	int count = 0;
 	for (int i = -1; i < 2; i++) {
 		for (int j = -1; j < 2; j++) {
 			if (i == 0 && j == 0) continue;
 			int nx = x + i, ny = y + j;
-			if (nx >= 0 && nx < rows && ny >= 0 && ny < cols && cells[nx][ny] == ALIVE)
+			if (nx >= 0 && nx < rows && ny >= 0 && ny < cols && cells[nx][ny].status_prev == ALIVE)
 				count++;
 		}
 	}
@@ -27,24 +30,16 @@ int count_alive_neighbours(bool **cells, int x, int y, int rows, int cols) {
 
 void update_cells(Plug *plug) {
 	// update cells
-	bool **temp = (bool **)malloc(plug->cols * sizeof(bool *));
-	for (int i = 0; i < plug->cols; ++i) {
-		temp[i] = (bool *)malloc(plug->rows * sizeof(bool));
-		for (int j = 0; j < plug->rows; ++j) {
-			temp[i][j] = plug->cells[i][j].status;
-		}
-	}
-
 	for (int i = 0; i < plug->cols; ++i) {
 		for (int j = 0; j < plug->rows; ++j) {
-			int alive = count_alive_neighbours(temp, i, j, plug->rows, plug->cols);
-			if (temp[i][j] == ALIVE) {
+			int alive = count_alive_neighbours(plug->cells, i, j, plug->rows, plug->cols);
+			if (plug->cells[i][j].status_prev == ALIVE) {
 				if (alive < 2 || alive > 3) {
-					plug->cells[i][j].status = DEAD;
+					plug->cells[i][j].status_next = DEAD;
 				}
 			} else {
 				if (alive == 3) {
-					plug->cells[i][j].status = ALIVE;
+					plug->cells[i][j].status_next = ALIVE;
 				}
 			}
 		}
@@ -56,10 +51,10 @@ void create_pulsar(Plug *plug){
 	int x = plug->cols / 2;
 	int y = plug->rows / 2;
 	for (int i = -2; i < 3; i++) {
-		plug->cells[x + i][y - 2].status = ALIVE;
-		plug->cells[x + i][y + 2].status = ALIVE;
-		plug->cells[x - 2][y + i].status = ALIVE;
-		plug->cells[x + 2][y + i].status = ALIVE;
+		plug->cells[x + i][y - 2].status_next = ALIVE;
+		plug->cells[x + i][y + 2].status_next = ALIVE;
+		plug->cells[x - 2][y + i].status_next = ALIVE;
+		plug->cells[x + 2][y + i].status_next = ALIVE;
 	}
 }
 
@@ -68,32 +63,32 @@ void create_gun(Plug *plug) {
 	int x = (plug->cols / 2) - 10;
 	int y = (plug->rows / 2) - 10;
 	for (int i = -4; i < 4; i++) {
-		plug->cells[x + i][y - 1].status = ALIVE;
-		plug->cells[x + i][y + 1].status = ALIVE;
+		plug->cells[x + i][y - 1].status_next = ALIVE;
+		plug->cells[x + i][y + 1].status_next = ALIVE;
 	}
-	plug->cells[x - 4][y].status = ALIVE;
-	plug->cells[x + 4][y].status = ALIVE;
-	plug->cells[x - 5][y + 1].status = ALIVE;
-	plug->cells[x + 5][y + 1].status = ALIVE;
-	plug->cells[x - 6][y + 2].status = ALIVE;
-	plug->cells[x + 6][y + 2].status = ALIVE;
-	plug->cells[x - 7][y + 3].status = ALIVE;
-	plug->cells[x + 7][y + 3].status = ALIVE;
-	plug->cells[x - 7][y - 3].status = ALIVE;
-	plug->cells[x + 7][y - 3].status = ALIVE;
-	plug->cells[x - 6][y - 4].status = ALIVE;
-	plug->cells[x + 6][y - 4].status = ALIVE;
-	plug->cells[x - 5][y - 5].status = ALIVE;
-	plug->cells[x + 5][y - 5].status = ALIVE;
-	plug->cells[x - 4][y - 6].status = ALIVE;
-	plug->cells[x + 4][y - 6].status = ALIVE;
-	plug->cells[x - 3][y - 6].status = ALIVE;
-	plug->cells[x + 3][y - 6].status = ALIVE;
-	plug->cells[x - 2][y - 6].status = ALIVE;
-	plug->cells[x + 2][y - 6].status = ALIVE;
-	plug->cells[x - 1][y - 6].status = ALIVE;
-	plug->cells[x + 1][y - 6].status = ALIVE;
-	plug->cells[x][y - 6].status = ALIVE;
+	plug->cells[x - 4][y].status_next = ALIVE;
+	plug->cells[x + 4][y].status_next = ALIVE;
+	plug->cells[x - 5][y + 1].status_next = ALIVE;
+	plug->cells[x + 5][y + 1].status_next = ALIVE;
+	plug->cells[x - 6][y + 2].status_next = ALIVE;
+	plug->cells[x + 6][y + 2].status_next = ALIVE;
+	plug->cells[x - 7][y + 3].status_next = ALIVE;
+	plug->cells[x + 7][y + 3].status_next = ALIVE;
+	plug->cells[x - 7][y - 3].status_next = ALIVE;
+	plug->cells[x + 7][y - 3].status_next = ALIVE;
+	plug->cells[x - 6][y - 4].status_next = ALIVE;
+	plug->cells[x + 6][y - 4].status_next = ALIVE;
+	plug->cells[x - 5][y - 5].status_next = ALIVE;
+	plug->cells[x + 5][y - 5].status_next = ALIVE;
+	plug->cells[x - 4][y - 6].status_next = ALIVE;
+	plug->cells[x + 4][y - 6].status_next = ALIVE;
+	plug->cells[x - 3][y - 6].status_next = ALIVE;
+	plug->cells[x + 3][y - 6].status_next = ALIVE;
+	plug->cells[x - 2][y - 6].status_next = ALIVE;
+	plug->cells[x + 2][y - 6].status_next = ALIVE;
+	plug->cells[x - 1][y - 6].status_next = ALIVE;
+	plug->cells[x + 1][y - 6].status_next = ALIVE;
+	plug->cells[x][y - 6].status_next = ALIVE;
 }
 
 void DrawFrame(Plug *plug) {
@@ -102,37 +97,54 @@ void DrawFrame(Plug *plug) {
 
 	for (int i = 0; i < plug->cols; i++) {
 		for (int j = 0; j < plug->rows; j++) {
-			if (plug->cells[i][j].status == ALIVE)
+			if (plug->cells[i][j].status_next == ALIVE)
 				DrawRectangle(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, BLUE);
+						cellWidth, cellHeight, RED);
 			DrawRectangleLines(i * cellWidth, j * cellHeight,
 					cellWidth, cellHeight, BLACK);
+			plug->cells[i][j].status_prev = plug->cells[i][j].status_next;
 		}
 	}
 }
 
-void *plug_init(void) {
-	Plug *plug = (Plug *) malloc(sizeof(Plug));
+void plug_init(void) {
+	Plug *init = (Plug *) malloc(sizeof(Plug));
 	Cell **grid = (Cell **) calloc(GRID_COLS, sizeof(Cell *));
 	for (int i = 0; i < GRID_COLS; i++) {
 		grid[i] = (Cell *) malloc(GRID_ROWS * sizeof(Cell));
 	}
 
-	plug->cells = grid;
-	plug->rows = GRID_ROWS;
-	plug->cols = GRID_COLS;
+	init->cells = grid;
+	init->rows = GRID_ROWS;
+	init->cols = GRID_COLS;
 
-	plug->windowWidth = GetScreenWidth();
-	plug->windowHeight = GetScreenHeight();
-	plug->playing = false;
+	init->windowWidth = GetScreenWidth();
+	init->windowHeight = GetScreenHeight();
+	init->playing = false;
 
+	plug = init;
 	fprintf(stdout, "INFO: Plug initialized\n");
 
-	return plug;
+	BeginDrawing();
+		ClearBackground(RAYWHITE);
+		int cellWidth = GetScreenWidth() / init->cols;
+		int cellHeight = GetScreenHeight() / init->rows;
+		for (int i = 0; i < init->cols; i++) {
+			for (int j = 0; j < init->rows; j++) {
+				DrawRectangle(i * cellWidth, j * cellHeight,
+						cellWidth, cellHeight, RAYWHITE);
+				DrawRectangleLines(i * cellWidth, j * cellHeight,
+						cellWidth, cellHeight, BLACK);
+				init->cells[i][j].x = i;
+				init->cells[i][j].y = j;
+				init->cells[i][j].status_next = DEAD;
+			}
+		}
+	EndDrawing();
+
 }
 
-void plug_update(void *state) {
-	Plug *plug = (Plug *) state;
+void plug_update() {
 	BeginDrawing();
 	srand(time(NULL));
 
@@ -144,7 +156,7 @@ void plug_update(void *state) {
 	if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
 		int x = GetMouseX() / cellWidth;
 		int y = GetMouseY() / cellHeight;
-		plug->cells[x][y].status = !plug->cells[x][y].status;
+		plug->cells[x][y].status_next = !plug->cells[x][y].status_next;
 	}
 
 	if (IsKeyPressed(KEY_SPACE)) {
@@ -154,7 +166,7 @@ void plug_update(void *state) {
 	if (IsKeyPressed(KEY_C)) {
 		for (int i = 0; i < plug->cols; i++) {
 			for (int j = 0; j < plug->rows; j++) {
-				plug->cells[i][j].status = DEAD;
+				plug->cells[i][j].status_next = DEAD;
 			}
 		}
 	}
@@ -166,7 +178,7 @@ void plug_update(void *state) {
 	if (IsKeyPressed(KEY_G)) {
 		for (int i = 0; i < plug->cols; i++) {
 			for (int j = 0; j < plug->rows; j++) {
-				plug->cells[i][j].status = rand() % 2;
+				plug->cells[i][j].status_next = rand() % 2;
 			}
 		}
 	}
@@ -194,12 +206,53 @@ void plug_update(void *state) {
 void *plug_pre_load(void) {
 	fprintf(stdout, "INFO: Plug Pre-Load\n");
 	// some deinitalization
-	return NULL;
+	if (plug == NULL) {
+		plug_init();
+		return plug;
+	}
+
+	Plug *copy = (Plug *) malloc(sizeof(Plug));
+
+	Cell **grid = (Cell **) calloc(plug->cols, sizeof(Cell *));
+	for (int i = 0; i < plug->cols; i++) {
+		grid[i] = (Cell *) malloc(plug->rows * sizeof(Cell));
+	}
+	copy->cells = grid;
+
+	for (int i = 0; i < plug->cols; i++) {
+		for (int j = 0; j < plug->rows; j++) {
+			copy->cells[i][j].x = plug->cells[i][j].x;
+			copy->cells[i][j].y = plug->cells[i][j].y;
+			copy->cells[i][j].status_next = plug->cells[i][j].status_next;
+			copy->cells[i][j].status_prev = plug->cells[i][j].status_prev;
+			printf("\r[%d][%d] = %d", i, j, copy->cells[i][j].status_next);
+		}
+	}
+
+	for (int i = 0; i < GRID_COLS; i++) {
+		free(plug->cells[i]);
+	}
+	free(plug->cells);
+
+	copy->rows = plug->rows;
+	copy->cols = plug->cols;
+	copy->windowWidth = plug->windowWidth;
+	copy->windowHeight = plug->windowHeight;
+	copy->playing = plug->playing;
+
+
+	free(plug);
+	return copy;
 }
 
 void plug_post_load(void *state) {
 	fprintf(stdout, "INFO: Plug Post-Load\n");
 	// reinitialization
+	if (state != NULL) {
+		plug = (Plug *) state;
+		return;
+	} else {
+		plug_init();
+	}
+	printf("plug: %p\n", plug);
 }
-
-
