@@ -79,7 +79,14 @@ int main(int argc, char **argv) {
 		nob_sb_free(run_cmd);
 
 		cmd.count = 0;
-		nob_cmd_append(&cmd, "rm", out_file);
+
+		nob_cmd_append(&cmd, "rm");
+		if (nob_file_exists("nob.old"))
+			nob_cmd_append(&cmd, "nob.old");
+		if (nob_file_exists(plug_out_file))
+			nob_cmd_append(&cmd, plug_out_file);
+		if (nob_file_exists(out_file))
+			nob_cmd_append(&cmd, out_file);
 
 		if (!nob_cmd_run_sync(cmd)) return 1;
 

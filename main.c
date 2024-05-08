@@ -20,7 +20,7 @@ int main() {
 	InitWindow(ScreenWidth, ScreenHeight, "Game Of Life");
 
 	SetWindowTitle("Game Of Life");
-	SetTargetFPS(12);
+	SetTargetFPS(8);
 	// Close, minimize. maximize buttons
 
 	plug_init();
