@@ -1,4 +1,3 @@
-#include <dlfcn.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,17 +17,20 @@ int main() {
 	if (!reload_libplug()) return 1;
 
 	InitWindow(ScreenWidth, ScreenHeight, "Game Of Life");
-
+	srand(time(NULL));
 	SetWindowTitle("Game Of Life");
-	SetTargetFPS(8);
-	// Close, minimize. maximize buttons
+	SetTargetFPS(60);
 
 	plug_init();
+
 	while(!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_R)) {
+			TraceLog(LOG_INFO, "--------------------------------------------------");
+			TraceLog(LOG_INFO, "Reloading libplug.so...");
 			void *state = plug_pre_load();
 			if (!reload_libplug()) return 1;
 			plug_post_load(state);
+			TraceLog(LOG_INFO, "--------------------------------------------------");
 		}
 		plug_update();
 	}

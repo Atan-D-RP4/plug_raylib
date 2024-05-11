@@ -193,7 +193,9 @@ typedef struct {
 void nob_cmd_render(Nob_Cmd cmd, Nob_String_Builder *render);
 
 #define nob_cmd_append(cmd, ...) \
-    nob_da_append_many(cmd, ((const char*[]){__VA_ARGS__}), (sizeof((const char*[]){__VA_ARGS__})/sizeof(const char*)))
+    nob_da_append_many(cmd, \
+            ((const char*[]){__VA_ARGS__}), \
+            (sizeof((const char*[]){__VA_ARGS__})/sizeof(const char*)))
 
 // Free all the memory allocated by command arguments
 #define nob_cmd_free(cmd) NOB_FREE(cmd.items)

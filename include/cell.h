@@ -1,13 +1,13 @@
 #ifndef CELL_H_
 #define CELL_H_
 
-#define GRID_COLS 50
-#define GRID_ROWS 50
+#define GRID_COLS 80
+#define GRID_ROWS 80
 
 #define COLOR_ALIVE = YELLOW;
 
-#define ScreenWidth 1000
-#define ScreenHeight 1000
+#define ScreenWidth 1200
+#define ScreenHeight 1200
 
 typedef enum {
 	DEAD,
@@ -46,9 +46,9 @@ void DrawFrame(Plug *plug) {
 		for (int j = 0; j < plug->rows; j++) {
 			if (plug->cells[i][j].status_next == ALIVE)
 				DrawRectangle(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, BLUE);
+						cellWidth, cellHeight, YELLOW);
 			DrawRectangleLines(i * cellWidth, j * cellHeight,
-					cellWidth, cellHeight, BLACK);
+					cellWidth, cellHeight, RAYWHITE);
 			plug->cells[i][j].status_prev = plug->cells[i][j].status_next;
 		}
 	}
@@ -73,8 +73,8 @@ void update_cells(Plug *plug) {
 		for (int j = 0; j < plug->rows; ++j) {
 			int alive = count_alive_neighbours(plug->cells, i, j, plug->rows, plug->cols);
 			if (plug->cells[i][j].status_prev == ALIVE) {
-				if (alive < 2 || alive > 3) {
 					plug->cells[i][j].status_next = DEAD;
+				if (alive < 2 || alive > 3) {
 				}
 			} else {
 				if (alive == 3) {
@@ -87,47 +87,51 @@ void update_cells(Plug *plug) {
 
 void create_pulsar(Plug *plug) {
 	// create a pulsar in the grid
-	int x = plug->cols / 2;
-	int y = plug->rows / 2;
+	int x = GetMouseX() / (GetScreenWidth() / plug->cols);
+	int y = GetMouseY() / (GetScreenHeight() / plug->rows);
+
+	// Ensure the pulsar fits in the grid
+	if (x < 2 || x > plug->cols - 2 || y < 2 || y > plug->rows - 2) return;
+
 	for (int i = -2; i < 3; i++) {
+		// Ensure each of the access points exist in the grid
+		if (x + i < 0 || x + i >= plug->cols || y + i < 0 || y + i >= plug->rows) return;
+		if (x - 2 < 0 || x + 2 >= plug->cols || y - 2 < 0 || y + 2 >= plug->rows) return;
 		plug->cells[x + i][y - 2].status_next = ALIVE;
 		plug->cells[x + i][y + 2].status_next = ALIVE;
+
 		plug->cells[x - 2][y + i].status_next = ALIVE;
 		plug->cells[x + 2][y + i].status_next = ALIVE;
 	}
 }
 
 void create_gun(Plug *plug) {
-	// create a gun in the grid
-	int x = (plug->cols / 2) - 10;
-	int y = (plug->rows / 2) - 10;
-	for (int i = -4; i < 4; i++) {
-		plug->cells[x + i][y - 1].status_next = ALIVE;
-		plug->cells[x + i][y + 1].status_next = ALIVE;
-	}
-	plug->cells[x - 4][y].status_next = ALIVE;
-	plug->cells[x + 4][y].status_next = ALIVE;
-	plug->cells[x - 5][y + 1].status_next = ALIVE;
-	plug->cells[x + 5][y + 1].status_next = ALIVE;
-	plug->cells[x - 6][y + 2].status_next = ALIVE;
-	plug->cells[x + 6][y + 2].status_next = ALIVE;
-	plug->cells[x - 7][y + 3].status_next = ALIVE;
-	plug->cells[x + 7][y + 3].status_next = ALIVE;
-	plug->cells[x - 7][y - 3].status_next = ALIVE;
-	plug->cells[x + 7][y - 3].status_next = ALIVE;
-	plug->cells[x - 6][y - 4].status_next = ALIVE;
-	plug->cells[x + 6][y - 4].status_next = ALIVE;
-	plug->cells[x - 5][y - 5].status_next = ALIVE;
-	plug->cells[x + 5][y - 5].status_next = ALIVE;
-	plug->cells[x - 4][y - 6].status_next = ALIVE;
-	plug->cells[x + 4][y - 6].status_next = ALIVE;
-	plug->cells[x - 3][y - 6].status_next = ALIVE;
-	plug->cells[x + 3][y - 6].status_next = ALIVE;
-	plug->cells[x - 2][y - 6].status_next = ALIVE;
-	plug->cells[x + 2][y - 6].status_next = ALIVE;
-	plug->cells[x - 1][y - 6].status_next = ALIVE;
-	plug->cells[x + 1][y - 6].status_next = ALIVE;
-	plug->cells[x][y - 6].status_next = ALIVE;
+	// Gosper's Glider Gun
+	int x = plug->cols / 2;
+	int y = plug->rows / 2;
+	plug->cells[x][y].status_next = ALIVE;
+	plug->cells[x][y + 1].status_next = ALIVE;
+	plug->cells[x + 1][y].status_next = ALIVE;
+	plug->cells[x + 1][y + 1].status_next = ALIVE;
+	plug->cells[x - 1][y + 10].status_next = ALIVE;
+	plug->cells[x - 1][y + 11].status_next = ALIVE;
+	plug->cells[x - 2][y + 10].status_next = ALIVE;
+	plug->cells[x - 2][y + 11].status_next = ALIVE;
+	plug->cells[x + 2][y + 10].status_next = ALIVE;
+	plug->cells[x + 2][y + 11].status_next = ALIVE;
+	plug->cells[x + 3][y + 12].status_next = ALIVE;
+	plug->cells[x + 3][y + 14].status_next = ALIVE;
+	plug->cells[x + 4][y + 12].status_next = ALIVE;
+	plug->cells[x + 4][y + 14].status_next = ALIVE;
+	plug->cells[x + 5][y + 12].status_next = ALIVE;
+	plug->cells[x + 5][y + 13].status_next = ALIVE;
+	plug->cells[x + 5][y + 14].status_next = ALIVE;
+	plug->cells[x + 6][y + 11].status_next = ALIVE;
+	plug->cells[x + 6][y + 15].status_next = ALIVE;
+	plug->cells[x + 7][y + 10].status_next = ALIVE;
+	plug->cells[x + 7][y + 11].status_next = ALIVE;
+	plug->cells[x + 7][y + 15].status_next = ALIVE;
+	plug->cells[x + 7][y + 16].status_next = ALIVE;
 }
 
 #endif // CELL_IMPLEMENTATION

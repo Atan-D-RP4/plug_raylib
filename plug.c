@@ -14,21 +14,22 @@
 #define CELL_IMPLEMENTATION
 #include "include/cell.h"
 
-Plug *plug = NULL;
+static Plug *plug = NULL;
 
 void plug_update() {
 	BeginDrawing();
-	srand(time(NULL));
 
-	ClearBackground(RAYWHITE);
+	ClearBackground(BLACK);
 
 	int cellWidth = plug->windowWidth / plug->cols;
 	int cellHeight = plug->windowHeight / plug->rows;
 
-	if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+	if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
 		int x = GetMouseX() / cellWidth;
 		int y = GetMouseY() / cellHeight;
-		plug->cells[x][y].status_next = !plug->cells[x][y].status_next;
+		// Check if x and y are within the bounds of the grid
+		if (x >= 0 && x < plug->cols && y >= 0 && y < plug->rows)
+			plug->cells[x][y].status_next = !plug->cells[x][y].status_next;
 	}
 
 	if (IsKeyPressed(KEY_SPACE)) {
@@ -91,7 +92,7 @@ void plug_init(void) {
 	init->playing = false;
 
 	plug = init;
-	fprintf(stdout, "INFO: Plug initialized\n");
+	TraceLog(LOG_INFO, "Plug initialized");
 
 	BeginDrawing();
 		ClearBackground(RAYWHITE);
@@ -107,7 +108,8 @@ void plug_init(void) {
 			}
 		}
 	EndDrawing();
-	printf(	"Plug initialized with %d rows and %d cols\n", init->rows, init->cols);
+	TraceLog(LOG_INFO,"Plug initialized with %d rows and %d cols\n",
+			init->rows, init->cols);
 
 }
 
