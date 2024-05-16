@@ -19,7 +19,7 @@ static Plug *plug = NULL;
 void plug_update() {
 	BeginDrawing();
 
-	ClearBackground(BLACK);
+	ClearBackground(COLOR_BACKGROUND);
 
 	int cellWidth = plug->windowWidth / plug->cols;
 	int cellHeight = plug->windowHeight / plug->rows;

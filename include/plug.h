@@ -18,7 +18,7 @@ PLUGS_LIST
 
 #ifdef PLUG_IMPLEMENTATION
 
-const char *libplug_file_name = "./libplug.so";
+char *libplug_file_name = "./build/libplug.so";
 void *libplug = NULL;
 
 #ifdef HOT_RELOADABLE

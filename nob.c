@@ -8,9 +8,9 @@
 bool build_plug(Nob_Cmd *cmd);
 bool build_game(Nob_Cmd *cmd);
 
-bool hot_reloadable = true;
+bool hot_reloadable = false;
 
-const char *compile_cmd = "gcc";
+const char *compile_cmd = "clang";
 const char *src_file = "./src/main.c";
 const char *out_file = "./build/main";
 const char *plug_file = "./src/plug.c";
@@ -101,7 +101,6 @@ int main(int argc, char **argv) {
 
 		cmd.count = 0;
 		Nob_String_Builder run_cmd = { 0 };
-		nob_sb_append_cstr(&run_cmd, "./");
 		nob_sb_append_cstr(&run_cmd, out_file);
 		nob_cmd_append(&cmd, run_cmd.items);
 		nob_da_append_many(&cmd, argv, argc);
@@ -165,8 +164,8 @@ bool build_game(Nob_Cmd *cmd) {
 	cmd->count = 0;
 	nob_cmd_append(cmd, compile_cmd);
 
-	nob_cmd_append(cmd, src_file);
 	nob_cmd_append(cmd, "-o", out_file);
+	nob_cmd_append(cmd, src_file, "src/cell.c");
 
 	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
 		nob_cmd_append(cmd, CFLAGS_ARR[i].data);
@@ -189,10 +188,10 @@ bool build_game(Nob_Cmd *cmd) {
 bool build_plug(Nob_Cmd *cmd) {
 
 	cmd->count = 0;
-	nob_cmd_append(cmd, "clang");
+	nob_cmd_append(cmd, compile_cmd);
 
 	nob_cmd_append(cmd, "-o", plug_out_file);
-	nob_cmd_append(cmd, plug_file);
+	nob_cmd_append(cmd, plug_file, "src/cell.c");
 
 	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
 		nob_cmd_append(cmd, CFLAGS_ARR[i].data);

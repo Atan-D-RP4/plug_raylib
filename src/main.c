@@ -9,6 +9,7 @@
 
 #define PLUG_IMPLEMENTATION
 #include "include/plug.h"
+#include "include/cell.h"
 
 int ScreenWidth = 1200;
 int ScreenHeight = 1200;
@@ -20,7 +21,7 @@ int main() {
 	InitWindow(ScreenWidth, ScreenHeight, "Game Of Life");
 	srand(time(NULL));
 	SetWindowTitle("Game Of Life");
-	SetTargetFPS(60);
+	SetTargetFPS(FPS);
 
 	plug_init();
 
