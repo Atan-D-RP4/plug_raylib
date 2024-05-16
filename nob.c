@@ -8,7 +8,7 @@
 bool build_plug(Nob_Cmd *cmd);
 bool build_game(Nob_Cmd *cmd);
 
-bool hot_reloadable = false;
+bool hot_reloadable = true;
 
 const char *compile_cmd = "clang";
 const char *src_file = "./src/main.c";

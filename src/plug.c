@@ -14,6 +14,10 @@
 #define CELL_IMPLEMENTATION
 #include "include/cell.h"
 
+extern Color COLOR_BACKGROUND;
+extern Color COLOR_LINES;
+extern Color COLOR_ALIVE;
+
 static Plug *plug = NULL;
 
 void plug_update() {

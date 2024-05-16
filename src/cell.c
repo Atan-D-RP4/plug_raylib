@@ -4,6 +4,10 @@
 
 #include "include/cell.h"
 
+Color COLOR_BACKGROUND = RAYWHITE;
+Color COLOR_LINES = BLACK;
+Color COLOR_ALIVE = BLUE;
+
 void DrawFrame(Plug *plug) {
 	int cellWidth = plug->windowWidth / plug->cols;
 	int cellHeight = plug->windowHeight / plug->rows;
@@ -41,6 +45,9 @@ void update_cells(Plug *plug) {
 			if (plug->cells[i][j].status_prev == ALIVE) {
 					plug->cells[i][j].status_next = DEAD;
 				if (alive < 2 || alive > 3) {
+					plug->cells[i][j].status_next = DEAD;
+				} else {
+					plug->cells[i][j].status_next = ALIVE;
 				}
 			} else {
 				if (alive == 3) {

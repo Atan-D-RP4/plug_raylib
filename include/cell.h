@@ -1,14 +1,11 @@
 #ifndef CELL_H_
 #define CELL_H_
 
+#include "../raylib/include/raylib.h"
+
 #define GRID_COLS 80
 #define GRID_ROWS 80
-
-#define COLOR_BACKGROUND RAYWHITE
-#define COLOR_LINES DARKGRAY
-#define COLOR_ALIVE YELLOW
-
-#define FPS 8
+#define FPS 60
 
 typedef enum {
 	DEAD,
