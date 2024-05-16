@@ -9,8 +9,9 @@
 
 #define PLUG_IMPLEMENTATION
 #include "include/plug.h"
-#include "include/cell.h"
 
+int ScreenWidth = 1200;
+int ScreenHeight = 1200;
 
 int main() {
 

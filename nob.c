@@ -11,10 +11,10 @@ bool build_game(Nob_Cmd *cmd);
 bool hot_reloadable = true;
 
 const char *compile_cmd = "gcc";
-const char *src_file = "main.c";
-const char *out_file = "main";
-const char *plug_file = "plug.c";
-const char *plug_out_file = "libplug.so";
+const char *src_file = "./src/main.c";
+const char *out_file = "./build/main";
+const char *plug_file = "./src/plug.c";
+const char *plug_out_file = "./build/libplug.so";
 
 Nob_String_View CFLAGS_ARR[] = {
 	(Nob_String_View) { .data = "-Wall", .count = 5 },
@@ -27,6 +27,7 @@ Nob_String_View CFLAGS_ARR[] = {
 };
 
 Nob_String_View LDFLAGS_ARR[] = {
+	(Nob_String_View) { .data = "-I./", .count = 12 },
 	(Nob_String_View) { .data = "-I./raylib/include/", .count = 18 },
 	(Nob_String_View) { .data = "./raylib/lib/libraylib.so.5.0.0", .count = 30 },
 	(Nob_String_View) { .data = "-lm", .count = 3 },
@@ -40,6 +41,13 @@ Nob_String_View PLUGFLAGS_ARR[] = {
 
 int main(int argc, char **argv) {
 	NOB_GO_REBUILD_URSELF(argc, argv);
+
+	Nob_Cmd cmd = { 0 };
+	if (nob_file_exists("nob.old")) {
+		nob_cmd_append(&cmd, "rm");
+		nob_cmd_append(&cmd, "nob.old");
+		if (!nob_cmd_run_sync(cmd)) return 1;
+	}
 
 	// setenv("LD_LIBRARY_PATH", "./raylib/lib", 1);
 
@@ -68,10 +76,11 @@ int main(int argc, char **argv) {
 		nob_log(NOB_INFO, "Not hot reloadable");
 	}
 
-	Nob_Cmd cmd = { 0 };
-
 	if (strcmp(subcmd, "build") == 0) {
 
+		nob_mkdir_if_not_exists("./build");
+
+		cmd.count = 0;
 		if (!build_plug(&cmd)) return 1;
 		if (!build_game(&cmd)) return 1;;
 		nob_log(NOB_INFO, "--------------------------------------------------");
@@ -81,6 +90,9 @@ int main(int argc, char **argv) {
 		return 0;
 	} else if (strcmp(subcmd, "run") == 0) {
 
+		nob_mkdir_if_not_exists("./build");
+
+		cmd.count = 0;
 		if (!build_plug(&cmd)) return 1;
 		if (!build_game(&cmd)) return 1;;
 
@@ -99,8 +111,6 @@ int main(int argc, char **argv) {
 
 		cmd.count = 0;
 		nob_cmd_append(&cmd, "rm");
-		if (nob_file_exists("nob.old"))
-			nob_cmd_append(&cmd, "nob.old");
 		if (nob_file_exists(plug_out_file))
 			nob_cmd_append(&cmd, plug_out_file);
 		if (nob_file_exists(out_file))
@@ -130,15 +140,12 @@ int main(int argc, char **argv) {
 
 		cmd.count = 0;
 		nob_cmd_append(&cmd, "rm");
-		if (nob_file_exists("nob.old"))
-			nob_cmd_append(&cmd, "nob.old");
 		if (nob_file_exists("nob"))
 			nob_cmd_append(&cmd, "nob");
-		if (nob_file_exists(plug_out_file))
-			nob_cmd_append(&cmd, plug_out_file);
-		if (nob_file_exists(out_file))
-			nob_cmd_append(&cmd, out_file);
-
+		if (nob_file_exists("./build")) {
+			nob_cmd_append(&cmd, "-r");
+			nob_cmd_append(&cmd, "./build");
+		}
 		if (!nob_cmd_run_sync(cmd)) return 1;
 		nob_log(NOB_INFO, "--------------------------------------------------");
 		nob_log(NOB_INFO, "Cleaned");

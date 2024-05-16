@@ -6,9 +6,6 @@
 
 #define COLOR_ALIVE = YELLOW;
 
-#define ScreenWidth 1200
-#define ScreenHeight 1200
-
 typedef enum {
 	DEAD,
 	ALIVE

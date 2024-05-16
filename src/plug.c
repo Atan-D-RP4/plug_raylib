@@ -80,7 +80,7 @@ void plug_init(void) {
 	Plug *init = (Plug *) malloc(sizeof(Plug));
 	Cell **grid = (Cell **) calloc(GRID_COLS, sizeof(Cell *));
 	for (int i = 0; i < GRID_COLS; i++) {
-		grid[i] = (Cell *) malloc(GRID_ROWS * sizeof(Cell));
+		grid[i] = (Cell *) calloc(GRID_ROWS, sizeof(Cell));
 	}
 
 	init->cells = grid;
