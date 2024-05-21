@@ -126,3 +126,43 @@ void rand_square(Plug *plug) {
 		plug->cells[x + 2][y + i].status_next = rand() % 2;
 	}
 }
+
+void rand_square2(Plug *plug) {
+	int x = GetMouseX() / (GetScreenWidth() / plug->cols);
+	int y = GetMouseY() / (GetScreenHeight() / plug->rows);
+
+	// Ensure the pulsar fits in the grid
+	if (x < 4 || x > plug->cols - 5 || y < 4 || y > plug->rows - 5) return;
+
+	for (int i = -4; i < 5; i++) {
+		// Ensure each of the access points exist in the grid
+		if (x + i < 0 || x + i >= plug->cols || y + i < 0 || y + i >= plug->rows) return;
+		if (x - 4 < 0 || x + 4 >= plug->cols || y - 4 < 0 || y + 4 >= plug->rows) return;
+		plug->cells[x + i][y - 4].status_next = rand() % 2;
+		plug->cells[x + i][y + 4].status_next = rand() % 2;
+
+		plug->cells[x - 4][y + i].status_next = rand() % 2;
+		plug->cells[x + 4][y + i].status_next = rand() % 2;
+
+		plug->cells[x + i][y - 3].status_next = rand() % 2;
+		plug->cells[x + i][y + 3].status_next = rand() % 2;
+
+		plug->cells[x - 3][y + i].status_next = rand() % 2;
+		plug->cells[x + 3][y + i].status_next = rand() % 2;
+
+		plug->cells[x + i][y - 2].status_next = rand() % 2;
+		plug->cells[x + i][y + 2].status_next = rand() % 2;
+
+		plug->cells[x - 2][y + i].status_next = rand() % 2;
+		plug->cells[x + 2][y + i].status_next = rand() % 2;
+
+		plug->cells[x + i][y - 1].status_next = rand() % 2;
+		plug->cells[x + i][y + 1].status_next = rand() % 2;
+
+		plug->cells[x - 1][y + i].status_next = rand() % 2;
+		plug->cells[x + 1][y + i].status_next = rand() % 2;
+
+		plug->cells[x + i][y].status_next = rand() % 2;
+		plug->cells[x][y + i].status_next = rand() % 2;
+	}
+}

@@ -31,5 +31,6 @@ void update_cells(Plug *plug);
 void create_pulsar(Plug *plug);
 void create_gun(Plug *plug);
 void rand_square(Plug *plug);
+void rand_square2(Plug *plug);
 #endif // CELL_H_
 

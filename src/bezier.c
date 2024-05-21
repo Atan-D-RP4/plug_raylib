@@ -112,7 +112,7 @@ void plug_update() {
 	if (IsKeyDown(KEY_A)) plug->camera.offset.x += 10;
 	if (IsKeyDown(KEY_D)) plug->camera.offset.x -= 10;
 
-	if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyDown(KEY_Z)) plug->camera.zoom -= 0.1;
+	if (IsKeyDown(KEY_F)) plug->camera.zoom -= 0.1;
 	if (IsKeyDown(KEY_Z)) plug->camera.zoom += 0.1;
 
 	//	DrawDynCubes();
@@ -197,3 +197,8 @@ void plug_post_load(void *state) {
 	}
 }
 
+void plug_free(void) {
+	nob_da_free(plug->nodes);
+	free(plug);
+	TraceLog(LOG_INFO, "Plug Freed");
+}

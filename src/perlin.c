@@ -20,45 +20,120 @@
 #define SCALE 50
 #define RADIUS 5
 
-void attempt_one(void);
-void attempt_two(void);
+#define PARTICLE_COUNT 100
+#define SPAWN_POSITION_X 700
+#define SPAWN_POSITION_Y 300
+
+void DrawParticles(void);
 
 typedef struct {
-	Vector2 curr;
-	Vector2 next;
-	Vector2 gradient;
-} Point;
+	Vector2 position;
+	Vector2 velocity;
+} Particle;
 
 typedef struct {
 	Vector2 *items;
 	size_t count;
 	size_t capacity;
-} Trace;
+} Pixels;
 
 typedef struct {
-	size_t count;
 	Camera2D camera;
-	Point points[POINTS_X][POINTS_Y];
-	Trace trace;
+	Vector2 GLOBAL_FLOW;
+	Vector2 top_left;
+	Vector2 bottom_right;
+	Particle particles[PARTICLE_COUNT];
 } Plug;
 
 static Plug *plug = NULL;
 
-Vector2 getNoiseGradient(Vector2 pos) {
+
+Vector2 getNoiseGradient(Vector2 pos, float offset) {
 	Vector2 gradient;
 	float eps = 0.01f;
 
-	float noise = stb_perlin_noise3(pos.x, pos.y, 1.0f, 0, 0, 0);
-	float x_plus_noise = stb_perlin_noise3(pos.x + eps, pos.y, 0.0f, 0, 0, 0);
-	float y_plus_noise = stb_perlin_noise3(pos.x, pos.y + eps, 0.0f, 0, 0, 0);
+	float noise = stb_perlin_noise3(pos.x + offset, pos.y, 0.0f, 0, 0, 0);
+	float x_plus_noise = stb_perlin_noise3(pos.x + offset + eps, pos.y, 0.0f, 0, 0, 0);
+	float y_plus_noise = stb_perlin_noise3(pos.x + offset, pos.y + eps, 0.0f, 0, 0, 0);
 
-	gradient.x = (x_plus_noise - noise) / eps;
-	gradient.y = (y_plus_noise - noise) / eps;
+	gradient.x = cos((x_plus_noise - noise) / eps) * 20.0f;
+	gradient.y = sin((y_plus_noise - noise) / eps) * 20.0f;
+
+	float length = sqrt(gradient.x * gradient.x + gradient.y * gradient.y);
+	if (length != 0) {
+		gradient.x /= length;
+		gradient.y /= length;
+	}
+
+	gradient = Vector2Multiply(gradient, plug->GLOBAL_FLOW); // Apply global flow
+	gradient = Vector2Add(gradient, (Vector2) { 0.5f, 0.5f }); // Adjust global flow strength
+
+	length = sqrt(gradient.x * gradient.x + gradient.y * gradient.y);
+	if (length != 0) {
+		gradient.x /= length;
+		gradient.y /= length;
+	}
 
 	return gradient;
 }
 
+void DrawFlowField() {
+	Vector2 pos = { 0.0f, 0.0f };
+	float offset = GetFrameTime() * 0.5f;
+
+	for (int y = 0; y < POINTS_X; y++) {
+		for (int x = 0; x < POINTS_Y; x++) {
+			pos.x = x * SCALE; pos.y = y * SCALE;
+			if (x == 0 && y == 0) plug->top_left = pos;
+			if (x == POINTS_X - 1 && y == POINTS_Y - 1) plug->bottom_right = pos;
+			Vector2 gradient = Vector2Normalize(getNoiseGradient(pos, offset));
+			gradient = Vector2Scale(gradient, 40.0f);
+
+			DrawLineEx(pos, Vector2Add(pos, gradient), 2.0f, RED);
+		}
+	}
+	DrawRectangleV(plug->top_left, (Vector2) { 10, 10 }, RAYWHITE);
+	DrawRectangleV(plug->bottom_right, (Vector2) { 10, 10 }, RAYWHITE);
+}
+
+void DrawParticles(void) {
+	// Spawn a particle every quarter second
+	static int initialized = 0;
+	if (!initialized) {
+		for (size_t i = 0; i < PARTICLE_COUNT; i++) {
+			plug->particles[i].position = (Vector2){ SPAWN_POSITION_X, SPAWN_POSITION_Y };
+			plug->particles[i].velocity = getNoiseGradient(plug->particles[i].position, 0.0f);
+			plug->particles[i].velocity = Vector2Scale(plug->particles[i].velocity, 5.0f);
+			plug->particles[i].velocity = Vector2Add(plug->particles[i].velocity,
+					(Vector2){ GetRandomValue(-1000.0f, 1000.0f), GetRandomValue(-1000.0f, 1000.0f) } );
+		}
+		initialized = 1;
+	}
+
+	// Update and render particles
+	for (size_t i = 0; i < PARTICLE_COUNT; i++) {
+		Particle *particle = &plug->particles[i];
+		DrawCircleV(particle->position, RADIUS, WHITE);
+		particle->position = Vector2Add(particle->position, particle->velocity);
+		particle->velocity = getNoiseGradient(particle->position, 0.0f);
+		particle->velocity = Vector2Scale(particle->velocity, 5.0f);
+	}
+	// Reset particles if they go out of bounds
+	for (size_t i = 0; i < PARTICLE_COUNT; i++) {
+		Particle *particle = &plug->particles[i];
+		if (particle->position.x < plug->top_left.x || particle->position.x > plug->bottom_right.x ||
+				particle->position.y < plug->top_left.y || particle->position.y > plug->bottom_right.y) {
+			particle->position = (Vector2){ SPAWN_POSITION_X, SPAWN_POSITION_Y };
+			particle->velocity = getNoiseGradient(particle->position, 0.0f);
+			particle->velocity = Vector2Scale(particle->velocity, 5.0f);
+			particle->velocity = Vector2Add(particle->velocity,
+					(Vector2) { GetRandomValue(-1000.0f, 1000.0f), GetRandomValue(-1000.0f, 1000.0f) } );
+		}
+	}
+}
+
 void plug_init(void) {
+	srand(time(NULL));
 	TraceLog(LOG_INFO, "Plug Init");
 	Plug *init = (Plug *) malloc(sizeof(Plug));
 	if (init == NULL) {
@@ -66,43 +141,21 @@ void plug_init(void) {
 		exit(1);
 	}
 
-	// Initialize points in a 10x10 grid
-	Vector2 offset = { 10.0f, 10.0f };
-	for (size_t i = 0; i < POINTS_X; i++) {
-		for (size_t j = 0; j < POINTS_Y; j++) {
-			init->points[i][j] = (Point) {
-				.curr = (Vector2) {
-						.x = PADDING + (i * SCALE),
-						.y = PADDING + (j * SCALE)
-					},
-					.next = (Vector2) {
-						.x = PADDING + (i * SCALE),
-						.y = PADDING + (j * SCALE)
-					}
-			};
-			init->points[i][j].gradient =
-				Vector2Add(getNoiseGradient(init->points[i][j].curr),
-						offset);
-		}
-	}
+	init->GLOBAL_FLOW = (Vector2) { 0.5f, 0.5f };
 
-	init->count = 100;
 	init->camera = (Camera2D) {
-		.zoom = 0.25,
+		.zoom = 0.15,
 			.offset = {
-				.x = 0,
-				.y = 0
+				.x = 130,
+				.y = 140
 			},
-	};
-
-	init->trace = (Trace) {
-		.items = NULL,
-			.count = 0,
-			.capacity = 0
 	};
 
 	plug = init;
 	TraceLog(LOG_INFO, "Plug Initialized");
+	BeginDrawing();
+		ClearBackground(BLACK);
+	EndDrawing();
 }
 
 void plug_update (void) {
@@ -112,40 +165,21 @@ void plug_update (void) {
 	if (IsKeyDown(KEY_A)) plug->camera.offset.x += 10;
 	if (IsKeyDown(KEY_D)) plug->camera.offset.x -= 10;
 
-	if (IsKeyDown(KEY_U)) plug->camera.zoom -= 0.05;
+	if (IsKeyDown(KEY_F)) plug->camera.zoom -= 0.05;
 	if (IsKeyDown(KEY_Z)) plug->camera.zoom += 0.05;
 
-	//attempt_one();
-	//attempt_two();
+	if (IsKeyDown(KEY_Q)) plug->GLOBAL_FLOW.x -= 0.05;
+	if (IsKeyDown(KEY_E)) plug->GLOBAL_FLOW.x += 0.05;
+	if (IsKeyDown(KEY_O)) plug->GLOBAL_FLOW.y -= 0.05;
+	if (IsKeyDown(KEY_P)) plug->GLOBAL_FLOW.y += 0.05;
 
 	BeginDrawing();
 	BeginMode2D(plug->camera);
 	{
-		ClearBackground(BLACK);
-		for (int x = 0; x < POINTS_X; x++) {
-			for (int y = 0; y < POINTS_Y; y++) {
-				Vector2 pos = plug->points[x][y].curr;
-				Vector2 gradient = plug->points[x][y].gradient;
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.05f));  // Semi-transparent background
 
-				DrawCircleV(pos, RADIUS, WHITE);
-
-				DrawLineEx(pos,
-						Vector2Add(pos, gradient),
-						2.0f, RED);
-
-				// Update the next position based on the noise gradient
-//				plug->points[x][y].next = Vector2Add(plug->points[x][y].curr, gradient);
-//				plug->points[x][y].curr = plug->points[x][y].next;
-			}
-		}
-		for (int y = 0; y < POINTS_X; y++) {
-			for (int x = 0; x < POINTS_Y; x++) {
-            Vector2 pos = { x * SCALE, y * SCALE };
-            Vector2 gradient = getNoiseGradient(pos);
-
-            DrawLineEx(pos, (Vector2){ pos.x + gradient.x * 10.0f, pos.y + gradient.y * 10.0f }, 2.0f, RED);
-        }
-    }
+		DrawFlowField();
+		DrawParticles();
 	}
 	EndMode2D();
 	EndDrawing();
@@ -162,76 +196,17 @@ void plug_post_load(void *state) {
 	Plug *cpy = (Plug *) state;
 
 	plug_init();
-	memcpy(plug, cpy, sizeof(Plug));
-	TraceLog(LOG_INFO, "Trace Count: %d", plug->trace.count);
+	memcpy(plug, cpy, sizeof(*cpy));
 
-	TraceLog(LOG_INFO, "Camera Zoom: %f", plug->camera.zoom);
+	TraceLog(LOG_INFO, "Global Flow: %f, %f", plug->GLOBAL_FLOW.x, plug->GLOBAL_FLOW.y);
+	TraceLog(LOG_INFO, "Camera Offset: %f, %f", plug->camera.offset.x, plug->camera.offset.y);
 
 	free(cpy);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-void attempt_one(void) {
-	// Draw a circle
-	BeginDrawing();
-	BeginMode2D(plug->camera);
-	{
-		// Just a draw 100 points arranged in a grid 10 x 10
-		for (size_t x = 0; x < POINTS_X; x++) {
-			for (size_t y = 0; y < POINTS_Y; y++) {
-				DrawCircleV(plug->points[x][y].next, RADIUS, WHITE);
-				Vector2 curr = plug->points[x][y].curr;
-				DrawCircleV(plug->points[x][y].next, RADIUS, WHITE);
-				float t = stb_perlin_noise3(
-						(curr.x + GetTime()) / 100,
-						(curr.y + GetTime()) / 100,
-						1, 0, 0, 0);
-				plug->points[x][y].next = (Vector2) {
-					.x = curr.x + t,
-						.y = curr.y + t
-				};
-				plug->points[x][y].next = getNoiseGradient(plug->points[x][y].curr);
-				Vector2 pos = plug->points[x][y].curr;
-				Vector2 gradient = plug->points[x][y].next;
-				plug->points[x][y].curr = plug->points[x][y].next;
-
-				DrawLineEx(pos, (Vector2){ pos.x + gradient.x * 10.0f, pos.y + gradient.y * 10.0f }, 2.0f, RED);
-			}
-		}
-	}
-	EndMode2D();
-	EndDrawing();
+void plug_free(void) {
+	free(plug);
+	TraceLog(LOG_INFO, "--------------------------------------------------");
+	TraceLog(LOG_INFO, "Plug Freed");
+	TraceLog(LOG_INFO, "--------------------------------------------------");
 }
-
-void attempt_two(void) {
-	BeginDrawing();
-	BeginMode2D(plug->camera);
-	{
-		for (int x = 0; x < POINTS_X; x++) {
-			for (int y = 0; y < POINTS_Y; y++) {
-				DrawCircleV(plug->points[x][y].curr, RADIUS, WHITE);
-
-				Vector2 gradient = getNoiseGradient(plug->points[x][y].curr);
-				DrawLineEx(plug->points[x][y].curr, (Vector2){ plug->points[x][y].curr.x + gradient.x * 10.0f, plug->points[x][y].curr.y + gradient.y * 10.0f }, 2.0f, RED);
-
-				// Update the next position based on the noise gradient
-				plug->points[x][y].next.x = plug->points[x][y].curr.x + gradient.x;
-				plug->points[x][y].next.y = plug->points[x][y].curr.y + gradient.y;
-			}
-		}
-	}
-	EndMode2D();
-	EndDrawing();
-}
-

@@ -17,7 +17,6 @@ extern Color COLOR_BACKGROUND;
 extern Color COLOR_LINES;
 extern Color COLOR_ALIVE;
 
-
 static Plug *plug = NULL;
 
 void plug_update() {
@@ -60,28 +59,22 @@ void plug_update() {
 		}
 	}
 
-	if (IsKeyDown(KEY_P)) {
-		create_pulsar(plug);
-	}
+	if (IsKeyDown(KEY_P)) create_pulsar(plug);
 
-	if (IsKeyDown(KEY_O)) {
-		rand_square(plug);
-	}
+	if (IsKeyDown(KEY_O)) rand_square(plug);
 
-	if (IsKeyPressed(KEY_W)) {
-		create_gun(plug);
-	}
+	if (IsKeyDown(KEY_B)) rand_square2(plug);
+
+	if (IsKeyPressed(KEY_W)) create_gun(plug);
 
 	DrawFrame(plug);
+	EndDrawing();
 
 	if (!plug->playing) {
-		EndDrawing();
 		return;
 	}
 
 	update_cells(plug);
-
-	EndDrawing();
 }
 
 void plug_init(void) {
@@ -147,18 +140,23 @@ void plug_post_load(void *state) {
 	Plug *cpy = (Plug *) state;
 	plug_init();
 
+	TraceLog(LOG_INFO, "Plug Playing: %d", cpy->playing);
 	plug->playing = cpy->playing;
 
+	TraceLog(LOG_INFO, "Plug Post-Load Complete");
 	for (int i = 0; i < cpy->cols; i++) {
-		for (int j = 0; j < cpy->rows; j++) {
-			if (i >= plug->cols || j >= plug->rows) {
-				break;
-			}
-			plug->cells[i][j].status_next = cpy->cells[i][j].status_next;
-			plug->cells[i][j].status_prev = cpy->cells[i][j].status_prev;
-		}
+		memcpy(plug->cells[i], cpy->cells[i], cpy->rows * sizeof(Cell));
 		free(cpy->cells[i]);
 	}
 	free(cpy->cells);
 	free(cpy);
+}
+
+void plug_free(void) {
+	for (int i = 0; i < plug->cols; i++) {
+		free(plug->cells[i]);
+	}
+	free(plug->cells);
+	free(plug);
+	TraceLog(LOG_INFO, "Plug Freed");
 }

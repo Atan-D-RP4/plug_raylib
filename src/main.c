@@ -10,8 +10,8 @@
 #define PLUG_IMPLEMENTATION
 #include "include/plug.h"
 
-int ScreenWidth  = 1000;
-int ScreenHeight = 1000;
+int ScreenWidth  = 800;
+int ScreenHeight = 600;
 
 int main(int argc, char **argv) {
 
@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
 	SetWindowTitle("Game Of Life");
 	SetTargetFPS(60);
 
-	plug_init();
 
+	plug_init();
 	while(!WindowShouldClose()) {
 		if (IsKeyPressed(KEY_R)) {
 			TraceLog(LOG_INFO, "--------------------------------------------------");
@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
 		}
 		plug_update();
 	}
+	plug_free();
 
 	CloseWindow();
 	return 0;
