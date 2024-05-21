@@ -18,20 +18,25 @@ PLUGS_LIST
 
 #ifdef PLUG_IMPLEMENTATION
 
-char *libplug_file_name = "./build/libplug.so";
+char *libplug_file_name;
 void *libplug = NULL;
 
+void set_libplug_path(char *file_name) {
+    libplug_file_name = file_name;
+}
+
 #ifdef HOT_RELOADABLE
-#define PLUG(name, ret, ...) \
-    union { \
-        void *obj; \
-        name##_t *func; \
-    } name##_union; \
-    name##_t *name = NULL;
-PLUGS_LIST
-#undef PLUG
+    #define PLUG(name, ret, ...) \
+        union { \
+            void *obj; \
+            name##_t *func; \
+        } name##_union; \
+        name##_t *name = NULL;
+    PLUGS_LIST
+    #undef PLUG
 
 bool reload_libplug(void) {
+    fprintf(stdout, "Loading %s\n", libplug_file_name);
     if (libplug != NULL) {
         dlclose(libplug);
     }
@@ -56,10 +61,10 @@ bool reload_libplug(void) {
 }
 
 #else
-#define PLUG(name, ret, ...) name##_t name;
-#define reload_libplug() true
-PLUGS_LIST
-#undef PLUG
+    #define reload_libplug() true
+    #define PLUG(name, ret, ...) name##_t name;
+    PLUGS_LIST
+    #undef PLUG
 
 #endif // HOT_RELOADABLE
 #endif // PLUG_IMPLEMENTATION

@@ -5,16 +5,20 @@
 #define NOB_IMPLEMENTATION
 #include "include/nob.h"
 
-bool build_plug(Nob_Cmd *cmd);
+#define SRC_DIR "./src"
+#define BUILD_DIR "./build"
+
+bool build_life(Nob_Cmd *cmd);
+bool build_bezier(Nob_Cmd *cmd);
+bool build_perlin(Nob_Cmd *cmd);
+
 bool build_game(Nob_Cmd *cmd);
 
 bool hot_reloadable = true;
 
-const char *compile_cmd = "clang";
-const char *src_file = "./src/main.c";
-const char *out_file = "./build/main";
-const char *plug_file = "./src/plug.c";
-const char *plug_out_file = "./build/libplug.so";
+const char *compile_cmd = "cc";
+const char *src_file = SRC_DIR"/main.c";
+const char *out_file = BUILD_DIR"/main";
 
 Nob_String_View CFLAGS_ARR[] = {
 	(Nob_String_View) { .data = "-Wall", .count = 5 },
@@ -48,16 +52,10 @@ int main(int argc, char **argv) {
 		nob_cmd_append(&cmd, "nob.old");
 		if (!nob_cmd_run_sync(cmd)) return 1;
 	}
-
 	// setenv("LD_LIBRARY_PATH", "./raylib/lib", 1);
 
 	if (!nob_file_exists(src_file)) {
 		nob_log(NOB_ERROR, "Source file not found: %s\n", src_file);
-		return 1;
-	}
-
-	if (!nob_file_exists(plug_file)) {
-		nob_log(NOB_ERROR, "Plug file not found: %s\n", plug_file);
 		return 1;
 	}
 
@@ -81,8 +79,12 @@ int main(int argc, char **argv) {
 		nob_mkdir_if_not_exists("./build");
 
 		cmd.count = 0;
-		if (!build_plug(&cmd)) return 1;
+		if (!build_bezier(&cmd)) return 1;
+		if (!build_life(&cmd)) return 1;
+		if (!build_perlin(&cmd)) return 1;
+
 		if (!build_game(&cmd)) return 1;;
+
 		nob_log(NOB_INFO, "--------------------------------------------------");
 		nob_log(NOB_INFO, "Built plug and game");
 		nob_log(NOB_INFO, "--------------------------------------------------");
@@ -93,28 +95,25 @@ int main(int argc, char **argv) {
 		nob_mkdir_if_not_exists("./build");
 
 		cmd.count = 0;
-		if (!build_plug(&cmd)) return 1;
+		if (!build_life(&cmd)) return 1;
+		if (!build_bezier(&cmd)) return 1;
+		if (!build_perlin(&cmd)) return 1;
+
 		if (!build_game(&cmd)) return 1;;
 
 		nob_log(NOB_INFO, "--------------------------------------------------");
 		nob_log(NOB_INFO, "Running");
 
 		cmd.count = 0;
-		Nob_String_Builder run_cmd = { 0 };
-		nob_sb_append_cstr(&run_cmd, out_file);
-		nob_cmd_append(&cmd, run_cmd.items);
+		nob_cmd_append(&cmd, out_file);
 		nob_da_append_many(&cmd, argv, argc);
 		if (!nob_cmd_run_sync(cmd)) return 1;
 		nob_log(NOB_INFO, "--------------------------------------------------");
-		nob_sb_free(run_cmd);
 
 		cmd.count = 0;
-		nob_cmd_append(&cmd, "rm");
-		if (nob_file_exists(plug_out_file))
-			nob_cmd_append(&cmd, plug_out_file);
-		if (nob_file_exists(out_file))
-			nob_cmd_append(&cmd, out_file);
-
+		if (!nob_file_exists(BUILD_DIR)) return 1;
+		nob_cmd_append(&cmd, "rm", "-r");
+		nob_cmd_append(&cmd, BUILD_DIR);
 		if (!nob_cmd_run_sync(cmd)) return 1;
 
 		nob_log(NOB_INFO, "Cleaned");
@@ -124,7 +123,10 @@ int main(int argc, char **argv) {
 
 	} else if (strcmp(subcmd, "reload") == 0) {
 		if (hot_reloadable) {
-			if (!build_plug(&cmd)) return 1;
+			if (!build_life(&cmd)) return 1;
+			if (!build_bezier(&cmd)) return 1;
+			if (!build_perlin(&cmd)) return 1;
+
 			nob_log(NOB_INFO, "--------------------------------------------------");
 			nob_log(NOB_INFO, "Rebuilt plug");
 			nob_log(NOB_INFO, "--------------------------------------------------");
@@ -141,9 +143,9 @@ int main(int argc, char **argv) {
 		nob_cmd_append(&cmd, "rm");
 		if (nob_file_exists("nob"))
 			nob_cmd_append(&cmd, "nob");
-		if (nob_file_exists("./build")) {
+		if (nob_file_exists(BUILD_DIR)) {
 			nob_cmd_append(&cmd, "-r");
-			nob_cmd_append(&cmd, "./build");
+			nob_cmd_append(&cmd, BUILD_DIR);
 		}
 		if (!nob_cmd_run_sync(cmd)) return 1;
 		nob_log(NOB_INFO, "--------------------------------------------------");
@@ -165,16 +167,20 @@ bool build_game(Nob_Cmd *cmd) {
 	nob_cmd_append(cmd, compile_cmd);
 
 	nob_cmd_append(cmd, "-o", out_file);
-	nob_cmd_append(cmd, src_file, "src/cell.c");
+	nob_cmd_append(cmd, src_file);
 
 	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
 		nob_cmd_append(cmd, CFLAGS_ARR[i].data);
 	}
 
+	// This does not really work for no hot reloading
+	// But I'll leave it here as a reference when I want to
+	// make a fully integrated application which this project is not
 	if (hot_reloadable) {
 		nob_cmd_append(cmd, "-DHOT_RELOADABLE");
 	} else {
-		nob_cmd_append(cmd, plug_file);
+		nob_cmd_append(cmd, BUILD_DIR"/liblife.so");
+		nob_cmd_append(cmd, BUILD_DIR"/libbezier.so");
 	}
 
 	for (int i = 0; i < NOB_ARRAY_LEN(LDFLAGS_ARR); i++) {
@@ -185,18 +191,71 @@ bool build_game(Nob_Cmd *cmd) {
 
 }
 
-bool build_plug(Nob_Cmd *cmd) {
+bool build_life(Nob_Cmd *cmd) {
+
+	if (!nob_file_exists(SRC_DIR"/life.c"))	return 1;
+	if (!nob_file_exists(SRC_DIR"/cell.c"))	return 1;
 
 	cmd->count = 0;
 	nob_cmd_append(cmd, compile_cmd);
 
-	nob_cmd_append(cmd, "-o", plug_out_file);
-	nob_cmd_append(cmd, plug_file, "src/cell.c");
+	nob_cmd_append(cmd, "-o", BUILD_DIR"/liblife.so");
+	nob_cmd_append(cmd, SRC_DIR"/life.c");
+	nob_cmd_append(cmd, SRC_DIR"/cell.c");
 
 	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
 		nob_cmd_append(cmd, CFLAGS_ARR[i].data);
 	}
 
+	for (int i = 0; i < NOB_ARRAY_LEN(PLUGFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, PLUGFLAGS_ARR[i].data);
+	}
+
+	for (int i = 0; i < NOB_ARRAY_LEN(LDFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, LDFLAGS_ARR[i].data);
+	}
+
+	return nob_cmd_run_sync(*cmd);
+}
+
+bool build_bezier(Nob_Cmd *cmd) {
+
+	if (!nob_file_exists(SRC_DIR"/bezier.c"))	return 1;
+
+	cmd->count = 0;
+	nob_cmd_append(cmd, compile_cmd);
+
+	nob_cmd_append(cmd, "-o", BUILD_DIR"/libbezier.so");
+	nob_cmd_append(cmd, SRC_DIR"/bezier.c");
+
+	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, CFLAGS_ARR[i].data);
+	}
+
+	for (int i = 0; i < NOB_ARRAY_LEN(PLUGFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, PLUGFLAGS_ARR[i].data);
+	}
+
+	for (int i = 0; i < NOB_ARRAY_LEN(LDFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, LDFLAGS_ARR[i].data);
+	}
+
+	return nob_cmd_run_sync(*cmd);
+}
+
+bool build_perlin(Nob_Cmd *cmd) {
+
+	if (!nob_file_exists(SRC_DIR"/perlin.c"))	return 1;
+
+	cmd->count = 0;
+	nob_cmd_append(cmd, compile_cmd);
+
+	nob_cmd_append(cmd, "-o", BUILD_DIR"/libperlin.so");
+	nob_cmd_append(cmd, SRC_DIR"/perlin.c");
+
+	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, CFLAGS_ARR[i].data);
+	}
 
 	for (int i = 0; i < NOB_ARRAY_LEN(PLUGFLAGS_ARR); i++) {
 		nob_cmd_append(cmd, PLUGFLAGS_ARR[i].data);

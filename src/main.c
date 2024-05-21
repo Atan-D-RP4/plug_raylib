@@ -9,19 +9,29 @@
 
 #define PLUG_IMPLEMENTATION
 #include "include/plug.h"
-#include "include/cell.h"
 
-int ScreenWidth = 1200;
-int ScreenHeight = 1200;
+int ScreenWidth  = 1000;
+int ScreenHeight = 1000;
 
-int main() {
+int main(int argc, char **argv) {
 
+	if (argc == 0) {
+		TraceLog(LOG_ERROR, "Usage: %s <libplug.so>", argv[0]);
+		return 1;
+	}
+
+	char* libplug_path = argv[1];
+	set_libplug_path(libplug_path);
+
+	TraceLog(LOG_INFO, "--------------------------------------------------");
 	if (!reload_libplug()) return 1;
+	TraceLog(LOG_INFO, "--------------------------------------------------");
+
 
 	InitWindow(ScreenWidth, ScreenHeight, "Game Of Life");
 	srand(time(NULL));
 	SetWindowTitle("Game Of Life");
-	SetTargetFPS(FPS);
+	SetTargetFPS(60);
 
 	plug_init();
 
@@ -32,7 +42,6 @@ int main() {
 			void *state = plug_pre_load();
 			if (!reload_libplug()) return 1;
 			plug_post_load(state);
-			TraceLog(LOG_INFO, "--------------------------------------------------");
 		}
 		plug_update();
 	}

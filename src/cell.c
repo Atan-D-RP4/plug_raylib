@@ -1,12 +1,13 @@
+#include <stdlib.h>
 #include "raylib.h"
 #include "raymath.h"
 #include "rlgl.h"
 
 #include "include/cell.h"
 
-Color COLOR_BACKGROUND = RAYWHITE;
-Color COLOR_LINES = BLACK;
-Color COLOR_ALIVE = BLUE;
+const Color COLOR_BACKGROUND = { 245, 245, 245, 255 }; // WHITE
+const Color COLOR_LINES = { 0, 0, 0, 255 }; // BLACK
+const Color COLOR_ALIVE = { 230, 41, 55, 255 }; // RED
 
 void DrawFrame(Plug *plug) {
 	int cellWidth = plug->windowWidth / plug->cols;
@@ -105,4 +106,23 @@ void create_gun(Plug *plug) {
 	plug->cells[x + 7][y + 11].status_next = ALIVE;
 	plug->cells[x + 7][y + 15].status_next = ALIVE;
 	plug->cells[x + 7][y + 16].status_next = ALIVE;
+}
+
+void rand_square(Plug *plug) {
+	int x = GetMouseX() / (GetScreenWidth() / plug->cols);
+	int y = GetMouseY() / (GetScreenHeight() / plug->rows);
+
+	// Ensure the pulsar fits in the grid
+	if (x < 2 || x > plug->cols - 2 || y < 2 || y > plug->rows - 2) return;
+
+	for (int i = -2; i < 3; i++) {
+		// Ensure each of the access points exist in the grid
+		if (x + i < 0 || x + i >= plug->cols || y + i < 0 || y + i >= plug->rows) return;
+		if (x - 2 < 0 || x + 2 >= plug->cols || y - 2 < 0 || y + 2 >= plug->rows) return;
+		plug->cells[x + i][y - 2].status_next = rand() % 2;
+		plug->cells[x + i][y + 2].status_next = rand() % 2;
+
+		plug->cells[x - 2][y + i].status_next = rand() % 2;
+		plug->cells[x + 2][y + i].status_next = rand() % 2;
+	}
 }

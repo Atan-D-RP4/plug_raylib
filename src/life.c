@@ -1,5 +1,3 @@
-#include "include/plug.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,10 +11,12 @@
 
 #define CELL_IMPLEMENTATION
 #include "include/cell.h"
+#include "include/plug.h"
 
 extern Color COLOR_BACKGROUND;
 extern Color COLOR_LINES;
 extern Color COLOR_ALIVE;
+
 
 static Plug *plug = NULL;
 
@@ -64,6 +64,10 @@ void plug_update() {
 		create_pulsar(plug);
 	}
 
+	if (IsKeyDown(KEY_O)) {
+		rand_square(plug);
+	}
+
 	if (IsKeyPressed(KEY_W)) {
 		create_gun(plug);
 	}
@@ -81,10 +85,24 @@ void plug_update() {
 }
 
 void plug_init(void) {
+
+	TraceLog(LOG_INFO, "Plug Init");
 	Plug *init = (Plug *) malloc(sizeof(Plug));
+	if (init == NULL) {
+		TraceLog(LOG_ERROR, "Failed to allocate memory for plug");
+		exit(1);
+	}
 	Cell **grid = (Cell **) calloc(GRID_COLS, sizeof(Cell *));
+	if (grid == NULL) {
+		TraceLog(LOG_ERROR, "Failed to allocate memory for grid");
+		exit(1);
+	}
 	for (int i = 0; i < GRID_COLS; i++) {
 		grid[i] = (Cell *) calloc(GRID_ROWS, sizeof(Cell));
+		if (grid[i] == NULL) {
+			TraceLog(LOG_ERROR, "Failed to allocate memory for grid[%d]", i);
+			exit(1);
+		}
 	}
 
 	init->cells = grid;
@@ -120,40 +138,7 @@ void plug_init(void) {
 void *plug_pre_load(void) {
 	fprintf(stdout, "INFO: Plug Pre-Load\n");
 	// some deinitalization
-	if (plug == NULL) {
-		plug_init();
-		return plug;
-	}
-
-	Plug *copy = (Plug *) malloc(sizeof(Plug));
-
-	Cell **grid = (Cell **) calloc(plug->cols, sizeof(Cell *));
-	for (int i = 0; i < plug->cols; i++) {
-		grid[i] = (Cell *) malloc(plug->rows * sizeof(Cell));
-	}
-	copy->cells = grid;
-
-	for (int i = 0; i < plug->cols; i++) {
-		for (int j = 0; j < plug->rows; j++) {
-			copy->cells[i][j].status_next = plug->cells[i][j].status_next;
-			copy->cells[i][j].status_prev = plug->cells[i][j].status_prev;
-		}
-	}
-
-	for (int i = 0; i < plug->cols; i++) {
-		free(plug->cells[i]);
-	}
-	free(plug->cells);
-
-	copy->rows = plug->rows;
-	copy->cols = plug->cols;
-	copy->windowWidth = plug->windowWidth;
-	copy->windowHeight = plug->windowHeight;
-	copy->playing = plug->playing;
-
-
-	free(plug);
-	return copy;
+	return plug;
 }
 
 void plug_post_load(void *state) {
