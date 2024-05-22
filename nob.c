@@ -10,7 +10,7 @@
 
 bool build_life(Nob_Cmd *cmd);
 bool build_bezier(Nob_Cmd *cmd);
-bool build_perlin(Nob_Cmd *cmd);
+bool build_imager(Nob_Cmd *cmd);
 
 bool build_game(Nob_Cmd *cmd);
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		cmd.count = 0;
 		if (!build_bezier(&cmd)) return 1;
 		if (!build_life(&cmd)) return 1;
-		if (!build_perlin(&cmd)) return 1;
+		if (!build_imager(&cmd)) return 1;
 
 		if (!build_game(&cmd)) return 1;;
 
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 		cmd.count = 0;
 		if (!build_life(&cmd)) return 1;
 		if (!build_bezier(&cmd)) return 1;
-		if (!build_perlin(&cmd)) return 1;
+		if (!build_imager(&cmd)) return 1;
 
 		if (!build_game(&cmd)) return 1;;
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 		if (hot_reloadable) {
 			if (!build_life(&cmd)) return 1;
 			if (!build_bezier(&cmd)) return 1;
-			if (!build_perlin(&cmd)) return 1;
+			if (!build_imager(&cmd)) return 1;
 
 			nob_log(NOB_INFO, "--------------------------------------------------");
 			nob_log(NOB_INFO, "Rebuilt plug");
@@ -243,15 +243,15 @@ bool build_bezier(Nob_Cmd *cmd) {
 	return nob_cmd_run_sync(*cmd);
 }
 
-bool build_perlin(Nob_Cmd *cmd) {
+bool build_imager(Nob_Cmd *cmd) {
 
-	if (!nob_file_exists(SRC_DIR"/perlin.c"))	return 1;
+	if (!nob_file_exists(SRC_DIR"/imager.c"))	return 1;
 
 	cmd->count = 0;
 	nob_cmd_append(cmd, compile_cmd);
 
-	nob_cmd_append(cmd, "-o", BUILD_DIR"/libperlin.so");
-	nob_cmd_append(cmd, SRC_DIR"/perlin.c");
+	nob_cmd_append(cmd, "-o", BUILD_DIR"/libimager.so");
+	nob_cmd_append(cmd, SRC_DIR"/imager.c", SRC_DIR"/perlin.c");
 
 	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
 		nob_cmd_append(cmd, CFLAGS_ARR[i].data);

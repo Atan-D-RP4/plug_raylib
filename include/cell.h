@@ -1,7 +1,7 @@
 #ifndef CELL_H_
 #define CELL_H_
 
-#include "../raylib/include/raylib.h"
+#include "raylib.h"
 
 #define GRID_COLS 80
 #define GRID_ROWS 80
