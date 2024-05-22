@@ -38,7 +38,7 @@ void DrawFlowField(Vector2 global_flow, size_t pointsX, size_t pointsY, size_t s
 void DrawParticles(Vector2 global_flow, Particle *particles, size_t count, Vector2 top_left, Vector2 bottom_right, size_t scale, Color color) {
 	// Spawn a particle every quarter second
 	// Get a random point between 0,0 and 4950, 4950
-	scale = scale * 0.8f; // Speed of particles
+	scale = scale * 0.3f; // Speed of particles
 
 	static int initialized = 0;
 	if (!initialized) {

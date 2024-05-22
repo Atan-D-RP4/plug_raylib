@@ -59,10 +59,10 @@ void plug_update (void) {
 	if (IsKeyDown(KEY_F)) plug->camera.zoom -= 0.05;
 	if (IsKeyDown(KEY_Z)) plug->camera.zoom += 0.05;
 
-	if (IsKeyPressed(KEY_Q)) plug->GLOBAL_FLOW.x -= 0.005;
-	if (IsKeyPressed(KEY_E)) plug->GLOBAL_FLOW.x += 0.005;
-	if (IsKeyPressed(KEY_O)) plug->GLOBAL_FLOW.y -= 0.005;
-	if (IsKeyPressed(KEY_P)) plug->GLOBAL_FLOW.y += 0.005;
+	if (IsKeyDown(KEY_Q)) plug->GLOBAL_FLOW.x -= 0.005;
+	if (IsKeyDown(KEY_E)) plug->GLOBAL_FLOW.x += 0.005;
+	if (IsKeyDown(KEY_O)) plug->GLOBAL_FLOW.y -= 0.005;
+	if (IsKeyDown(KEY_P)) plug->GLOBAL_FLOW.y += 0.005;
 
 	if (IsKeyPressed(KEY_G)) TakeScreenshot("screenshot.png");
 	if (IsKeyPressed(KEY_C)) ClearBackground(BLACK);
@@ -80,7 +80,7 @@ void plug_update (void) {
 		DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.05f));
 
 		DrawParticles(plug->GLOBAL_FLOW, plug->particles, PARTICLE_COUNT, plug->top_left, plug->bottom_right, SCALE, BLUE);
-		//DrawFlowField(POINTS_X, POINTS_Y, SCALE, FIELD_COLOR);
+		// DrawFlowField(plug->GLOBAL_FLOW, POINTS_X, POINTS_Y, SCALE, WHITE);
 	}
 	EndMode2D();
 	EndDrawing();

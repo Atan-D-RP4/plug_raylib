@@ -13,7 +13,7 @@
 #define SCALE 40
 #define SCALE_FACTOR 0.15f
 
-#define RADIUS 3
+#define RADIUS 1
 #define FIELD_COLOR BLUE
 
 #define PARTICLE_COUNT 2500

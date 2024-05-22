@@ -16,7 +16,7 @@ bool build_game(Nob_Cmd *cmd);
 
 bool hot_reloadable = true;
 
-const char *compile_cmd = "cc";
+const char *compile_cmd = "clang";
 const char *src_file = SRC_DIR"/main.c";
 const char *out_file = BUILD_DIR"/main";
 
@@ -93,6 +93,8 @@ int main(int argc, char **argv) {
 	} else if (strcmp(subcmd, "run") == 0) {
 
 		nob_mkdir_if_not_exists("./build");
+
+		nob_log(NOB_INFO, "Application: %s", argv[0]);
 
 		cmd.count = 0;
 		if (!build_life(&cmd)) return 1;
