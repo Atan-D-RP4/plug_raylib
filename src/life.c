@@ -63,7 +63,7 @@ void plug_update() {
 
 	if (IsKeyDown(KEY_O)) rand_square(plug);
 
-	if (IsKeyDown(KEY_B)) rand_square2(plug);
+	if (IsKeyDown(KEY_I)) rand_square2(plug);
 
 	if (IsKeyPressed(KEY_W)) create_gun(plug);
 
