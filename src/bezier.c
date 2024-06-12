@@ -27,11 +27,35 @@ typedef struct {
 
 typedef struct {
 	Camera2D camera;
-	Vector2Array nodes;
 	int dragged_node;
+	Vector2Array nodes;
+	Vector2Array trail;
 } Plug;
 
 Plug *plug = NULL;
+
+void CircleAnim(Vector2 pos, float radius, float thickness, Color color) {
+		Vector2 circle2Pos = Vector2Add(pos, (Vector2) { (50 + 25) * cosf(GetTime() * 1.5f), (50 + 25) * sinf(GetTime() * 1.5f) });
+		Vector2 circle3Pos = Vector2Add(circle2Pos, (Vector2) { (25 + 10) * cosf(GetTime() * 3.0f), (25 + 10) * sinf(GetTime() * 3.0f) });
+		Vector2 circle4Pos = Vector2Add(circle3Pos, (Vector2) { (10 + 5) * cosf(GetTime() * 6.0f), (10 + 5) * sinf(GetTime() * 6.0f) });
+		Vector2 circle5Pos = Vector2Add(circle4Pos, (Vector2) { (5 + 2.5) * cosf(GetTime() * 12.0f), (5 + 2.5) * sinf(GetTime() * 12.0f) });
+		//DrawCircleLinesV(pos, 50, WHITE);
+		// Draw a circle that rolls on mouse circle
+		//DrawCircleLinesV(circle2Pos, 25, GREEN);
+		//DrawCircleLinesV(circle3Pos, 10, BLUE);
+		//DrawCircleLinesV(circle4Pos, 5, VIOLET);
+		DrawPixelV(circle5Pos, RED);
+
+		//Vector2 nodes2[4] = {
+		//	pos,
+		//	circle2Pos,
+		//	circle3Pos,
+		//	circle4Pos
+		//};
+		//DrawSplineBezierCubic(nodes2, 4, 0.5, RED);
+
+
+}
 
 void DrawSplineFrame(Vector2 *nodes, int nodes_count) {
 	DrawLineV(Vector2Lerp(nodes[0], nodes[1], 0.5), Vector2Lerp(nodes[1], nodes[2], 0.5), WHITE);
@@ -77,11 +101,12 @@ void DrawDynCubes(void) {
 }
 
 void plug_init(void) {
-	Plug *state = malloc(sizeof(Plug));
-	if (!state) {
+	TraceLog(LOG_INFO, "Plug Init");
+	Plug *init = malloc(sizeof(Plug));
+	if (!init) {
 		fprintf(stderr, "ERROR: Plug initialization failed\n");
 	}
-	state->camera = (Camera2D) {
+	init->camera = (Camera2D) {
 		.zoom = 1.0,
 			.offset = {
 				.x = (float) GetScreenWidth() / 2,
@@ -89,20 +114,23 @@ void plug_init(void) {
 			},
 	};
 
-	state->nodes = (Vector2Array) {
-		.items = NULL,
+	init->nodes = (Vector2Array) {
+			.items = NULL,
 			.count = 0,
 			.capacity = 0
 	};
-	state->dragged_node = -1;
+	init->dragged_node = -1;
 
-	nob_da_append(&state->nodes, ((Vector2) { 0.0, 0.0 }));
-	nob_da_append(&state->nodes, ((Vector2) { AXIS_LENGTH, -AXIS_LENGTH }));
-	nob_da_append(&state->nodes, ((Vector2) { AXIS_LENGTH, 0.0 }));
-	nob_da_append(&state->nodes, ((Vector2) { 0.0, AXIS_LENGTH }));
+	nob_da_append(&init->nodes, ((Vector2) { 0.0, 0.0 }));
+	nob_da_append(&init->nodes, ((Vector2) { AXIS_LENGTH, -AXIS_LENGTH }));
+	nob_da_append(&init->nodes, ((Vector2) { AXIS_LENGTH, 0.0 }));
+	nob_da_append(&init->nodes, ((Vector2) { 0.0, AXIS_LENGTH }));
 
-	plug = state;
+	plug = init;
 	fprintf(stdout, "INFO: Plug initialized\n");
+	BeginDrawing();
+	ClearBackground(BLACK);
+	EndDrawing();
 }
 
 void plug_update() {
@@ -115,12 +143,13 @@ void plug_update() {
 	if (IsKeyDown(KEY_F)) plug->camera.zoom -= 0.1;
 	if (IsKeyDown(KEY_Z)) plug->camera.zoom += 0.1;
 
+	if (IsKeyPressed(KEY_G)) TakeScreenshot("screenshot.png");
+
 	//	DrawDynCubes();
 
 	BeginDrawing();
 	BeginMode2D(plug->camera);
 	{
-		ClearBackground(BLACK);
 		if (GetTime() < 2.0) {
 			DrawText("Press Space to add a node", 10, 10, 20, WHITE);
 		}
@@ -153,18 +182,22 @@ void plug_update() {
 			}
 		}
 
-		for (size_t j = 0; j < nodes_count - 1; ++j) {
-			for (size_t i = 0, res = 100; i < res; ++i) {
-				float t = (float) i / res;
-				float it = 1 - t;
-				Vector2 p = Vector2Zero();
-				p = Vector2Add(p, Vector2Scale(nodes[j], it * it * it));
-				p = Vector2Add(p, Vector2Scale(nodes[j + 1 % nodes_count], 3 * it * it * t));
-				p = Vector2Add(p, Vector2Scale(nodes[j + 2 % nodes_count], 3 * it * t * t));
-				p = Vector2Add(p, Vector2Scale(nodes[j + 3 % nodes_count], t * t * t));
-				DrawCircleV(p, 2, RED);
-			}
-		}
+		//for (size_t j = 0; j < nodes_count - 1; ++j) {
+		//	for (size_t i = 0, res = 500; i < res; ++i) {
+		//		float t = (float) i / res;
+		//		float it = 1 - t;
+		//		Vector2 p = Vector2Zero();
+		//		p = Vector2Add(p, Vector2Scale(nodes[j], it * it * it));
+		//		p = Vector2Add(p, Vector2Scale(nodes[j + 1 % nodes_count], 3 * it * it * t));
+		//		p = Vector2Add(p, Vector2Scale(nodes[j + 2 % nodes_count], 3 * it * t * t));
+		//		p = Vector2Add(p, Vector2Scale(nodes[j + 3 % nodes_count], t * t * t));
+		//		DrawPixelV(p, RED);
+		//	}
+		//}
+
+		DrawSplineBezierCubic(plug->nodes.items, plug->nodes.count, 0.5, RED);
+
+		// CircleAnim(mouse, 100, 2, RED);
 
 	}
 	EndMode2D();
@@ -182,19 +215,26 @@ void *plug_pre_load(void) {
 void plug_post_load(void *state) {
 	TraceLog(LOG_INFO, "Plug Post-Load");
 	// reinitialization
+	Plug *cpy = state;
 	plug_init();
-
-	if (state == NULL) {
-		TraceLog(LOG_INFO, "State is NULL");
-	} else {
-		TraceLog(LOG_INFO, "State is not NULL");
-		plug->camera = ((Plug *) state)->camera;
-		plug->nodes = ((Plug *) state)->nodes;
-		plug->dragged_node = ((Plug *) state)->dragged_node;
-
-		nob_da_free(((Plug *) state)->nodes);
-		free(state);
+	if (cpy == NULL) {
+		TraceLog(LOG_INFO, "No state to load");
+		return;
 	}
+
+	TraceLog(LOG_INFO, "Loading state");
+	plug->camera = cpy->camera;
+	plug->dragged_node = cpy->dragged_node;
+
+	for (size_t i = 0; i < cpy->nodes.count; i++) {
+		if (i >= plug->nodes.count) {
+			nob_da_append(&plug->nodes, cpy->nodes.items[i]);
+		}
+		plug->nodes.items[i] = cpy->nodes.items[i];
+	}
+
+	nob_da_free(cpy->nodes);
+	free(cpy);
 }
 
 void plug_free(void) {

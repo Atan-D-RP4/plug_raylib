@@ -3,24 +3,24 @@
 #include "raymath.h"
 #include "rlgl.h"
 
-#include "include/cell.h"
+#include "cell.h"
 
 const Color COLOR_BACKGROUND = { 245, 245, 245, 255 }; // WHITE
 const Color COLOR_LINES = { 0, 0, 0, 255 }; // BLACK
 const Color COLOR_ALIVE = { 230, 41, 55, 255 }; // RED
 
-void DrawFrame(Plug *plug) {
-	int cellWidth = plug->windowWidth / plug->cols;
-	int cellHeight = plug->windowHeight / plug->rows;
+void DrawFrame(Cell **cells, int rows, int cols, int windowWidth, int windowHeight) {
+	int cellWidth = windowWidth / cols;
+	int cellHeight = windowHeight / rows;
 
-	for (int i = 0; i < plug->cols; i++) {
-		for (int j = 0; j < plug->rows; j++) {
-			if (plug->cells[i][j].status_next == ALIVE)
+	for (int i = 0; i < cols; i++) {
+		for (int j = 0; j < rows; j++) {
+			if (cells[i][j].status_next == ALIVE)
 				DrawRectangle(i * cellWidth, j * cellHeight,
 						cellWidth, cellHeight, COLOR_ALIVE);
 			DrawRectangleLines(i * cellWidth, j * cellHeight,
 					cellWidth, cellHeight, COLOR_LINES);
-			plug->cells[i][j].status_prev = plug->cells[i][j].status_next;
+			cells[i][j].status_prev = cells[i][j].status_next;
 		}
 	}
 }
@@ -38,129 +38,129 @@ int count_alive_neighbours(Cell **cells, int x, int y, int rows, int cols) {
 	return count;
 }
 
-void update_cells(Plug *plug) {
+void update_cells(Cell **cells, int rows, int cols) {
 	// update cells
-	for (int i = 0; i < plug->cols; ++i) {
-		for (int j = 0; j < plug->rows; ++j) {
-			int alive = count_alive_neighbours(plug->cells, i, j, plug->rows, plug->cols);
-			if (plug->cells[i][j].status_prev == ALIVE) {
-					plug->cells[i][j].status_next = DEAD;
+	for (int i = 0; i < cols; ++i) {
+		for (int j = 0; j < rows; ++j) {
+			int alive = count_alive_neighbours(cells, i, j, rows, cols);
+			if (cells[i][j].status_prev == ALIVE) {
+					cells[i][j].status_next = DEAD;
 				if (alive < 2 || alive > 3) {
-					plug->cells[i][j].status_next = DEAD;
+					cells[i][j].status_next = DEAD;
 				} else {
-					plug->cells[i][j].status_next = ALIVE;
+					cells[i][j].status_next = ALIVE;
 				}
 			} else {
 				if (alive == 3) {
-					plug->cells[i][j].status_next = ALIVE;
+					cells[i][j].status_next = ALIVE;
 				}
 			}
 		}
 	}
 }
 
-void create_pulsar(Plug *plug) {
+void create_pulsar(Cell **cells, int rows, int cols) {
 	// create a pulsar in the grid
-	int x = GetMouseX() / (GetScreenWidth() / plug->cols);
-	int y = GetMouseY() / (GetScreenHeight() / plug->rows);
+	int x = GetMouseX() / (GetScreenWidth() / cols);
+	int y = GetMouseY() / (GetScreenHeight() / rows);
 
 	// Ensure the pulsar fits in the grid
-	if (x < 2 || x > plug->cols - 2 || y < 2 || y > plug->rows - 2) return;
+	if (x < 2 || x > cols - 2 || y < 2 || y > rows - 2) return;
 
 	for (int i = -2; i < 3; i++) {
 		// Ensure each of the access points exist in the grid
-		if (x + i < 0 || x + i >= plug->cols || y + i < 0 || y + i >= plug->rows) return;
-		if (x - 2 < 0 || x + 2 >= plug->cols || y - 2 < 0 || y + 2 >= plug->rows) return;
-		plug->cells[x + i][y - 2].status_next = ALIVE;
-		plug->cells[x + i][y + 2].status_next = ALIVE;
+		if (x + i < 0 || x + i >= cols || y + i < 0 || y + i >= rows) return;
+		if (x - 2 < 0 || x + 2 >= cols || y - 2 < 0 || y + 2 >= rows) return;
+		cells[x + i][y - 2].status_next = ALIVE;
+		cells[x + i][y + 2].status_next = ALIVE;
 
-		plug->cells[x - 2][y + i].status_next = ALIVE;
-		plug->cells[x + 2][y + i].status_next = ALIVE;
+		cells[x - 2][y + i].status_next = ALIVE;
+		cells[x + 2][y + i].status_next = ALIVE;
 	}
 }
 
-void create_gun(Plug *plug) {
+void create_gun(Cell **cells, int rows, int cols) {
 	// Gosper's Glider Gun
-	int x = plug->cols / 2;
-	int y = plug->rows / 2;
-	plug->cells[x][y].status_next = ALIVE;
-	plug->cells[x][y + 1].status_next = ALIVE;
-	plug->cells[x + 1][y].status_next = ALIVE;
-	plug->cells[x + 1][y + 1].status_next = ALIVE;
-	plug->cells[x - 1][y + 10].status_next = ALIVE;
-	plug->cells[x - 1][y + 11].status_next = ALIVE;
-	plug->cells[x - 2][y + 10].status_next = ALIVE;
-	plug->cells[x - 2][y + 11].status_next = ALIVE;
-	plug->cells[x + 2][y + 10].status_next = ALIVE;
-	plug->cells[x + 2][y + 11].status_next = ALIVE;
-	plug->cells[x + 3][y + 12].status_next = ALIVE;
-	plug->cells[x + 3][y + 14].status_next = ALIVE;
-	plug->cells[x + 4][y + 12].status_next = ALIVE;
-	plug->cells[x + 4][y + 14].status_next = ALIVE;
-	plug->cells[x + 5][y + 12].status_next = ALIVE;
-	plug->cells[x + 5][y + 13].status_next = ALIVE;
-	plug->cells[x + 5][y + 14].status_next = ALIVE;
-	plug->cells[x + 6][y + 11].status_next = ALIVE;
-	plug->cells[x + 6][y + 15].status_next = ALIVE;
-	plug->cells[x + 7][y + 10].status_next = ALIVE;
-	plug->cells[x + 7][y + 11].status_next = ALIVE;
-	plug->cells[x + 7][y + 15].status_next = ALIVE;
-	plug->cells[x + 7][y + 16].status_next = ALIVE;
+	int x = cols / 2;
+	int y = rows / 2;
+	cells[x][y].status_next = ALIVE;
+	cells[x][y + 1].status_next = ALIVE;
+	cells[x + 1][y].status_next = ALIVE;
+	cells[x + 1][y + 1].status_next = ALIVE;
+	cells[x - 1][y + 10].status_next = ALIVE;
+	cells[x - 1][y + 11].status_next = ALIVE;
+	cells[x - 2][y + 10].status_next = ALIVE;
+	cells[x - 2][y + 11].status_next = ALIVE;
+	cells[x + 2][y + 10].status_next = ALIVE;
+	cells[x + 2][y + 11].status_next = ALIVE;
+	cells[x + 3][y + 12].status_next = ALIVE;
+	cells[x + 3][y + 14].status_next = ALIVE;
+	cells[x + 4][y + 12].status_next = ALIVE;
+	cells[x + 4][y + 14].status_next = ALIVE;
+	cells[x + 5][y + 12].status_next = ALIVE;
+	cells[x + 5][y + 13].status_next = ALIVE;
+	cells[x + 5][y + 14].status_next = ALIVE;
+	cells[x + 6][y + 11].status_next = ALIVE;
+	cells[x + 6][y + 15].status_next = ALIVE;
+	cells[x + 7][y + 10].status_next = ALIVE;
+	cells[x + 7][y + 11].status_next = ALIVE;
+	cells[x + 7][y + 15].status_next = ALIVE;
+	cells[x + 7][y + 16].status_next = ALIVE;
 }
 
-void rand_square(Plug *plug) {
-	int x = GetMouseX() / (GetScreenWidth() / plug->cols);
-	int y = GetMouseY() / (GetScreenHeight() / plug->rows);
+void rand_square(Cell **cells, int rows, int cols) {
+	int x = GetMouseX() / (GetScreenWidth() / cols);
+	int y = GetMouseY() / (GetScreenHeight() / rows);
 
 	// Ensure the pulsar fits in the grid
-	if (x < 2 || x > plug->cols - 2 || y < 2 || y > plug->rows - 2) return;
+	if (x < 2 || x > cols - 2 || y < 2 || y > rows - 2) return;
 
 	for (int i = -2; i < 3; i++) {
 		// Ensure each of the access points exist in the grid
-		if (x + i < 0 || x + i >= plug->cols || y + i < 0 || y + i >= plug->rows) return;
-		if (x - 2 < 0 || x + 2 >= plug->cols || y - 2 < 0 || y + 2 >= plug->rows) return;
-		plug->cells[x + i][y - 2].status_next = rand() % 2;
-		plug->cells[x + i][y + 2].status_next = rand() % 2;
+		if (x + i < 0 || x + i >= cols || y + i < 0 || y + i >= rows) return;
+		if (x - 2 < 0 || x + 2 >= cols || y - 2 < 0 || y + 2 >= rows) return;
+		cells[x + i][y - 2].status_next = rand() % 2;
+		cells[x + i][y + 2].status_next = rand() % 2;
 
-		plug->cells[x - 2][y + i].status_next = rand() % 2;
-		plug->cells[x + 2][y + i].status_next = rand() % 2;
+		cells[x - 2][y + i].status_next = rand() % 2;
+		cells[x + 2][y + i].status_next = rand() % 2;
 	}
 }
 
-void rand_square2(Plug *plug) {
-	int x = GetMouseX() / (GetScreenWidth() / plug->cols);
-	int y = GetMouseY() / (GetScreenHeight() / plug->rows);
+void rand_square2(Cell **cells, int rows, int cols) {
+	int x = GetMouseX() / (GetScreenWidth() / cols);
+	int y = GetMouseY() / (GetScreenHeight() / rows);
 
 	for (int i = -4; i < 5; i++) {
 		// Ensure each of the access points exist in the grid
-		if (x + i < 0 || x + i >= plug->cols || y + i < 0 || y + i >= plug->rows) continue;
-		if (x - 4 < 0 || x + 4 >= plug->cols || y - 4 < 0 || y + 4 >= plug->rows) continue;;
+		if (x + i < 0 || x + i >= cols || y + i < 0 || y + i >= rows) continue;
+		if (x - 4 < 0 || x + 4 >= cols || y - 4 < 0 || y + 4 >= rows) continue;;
 
-		plug->cells[x + i][y - 4].status_next = rand() % 2;
-		plug->cells[x + i][y + 4].status_next = rand() % 2;
+		cells[x + i][y - 4].status_next = rand() % 2;
+		cells[x + i][y + 4].status_next = rand() % 2;
 
-		plug->cells[x - 4][y + i].status_next = rand() % 2;
-		plug->cells[x + 4][y + i].status_next = rand() % 2;
+		cells[x - 4][y + i].status_next = rand() % 2;
+		cells[x + 4][y + i].status_next = rand() % 2;
 
-		plug->cells[x + i][y - 3].status_next = rand() % 2;
-		plug->cells[x + i][y + 3].status_next = rand() % 2;
+		cells[x + i][y - 3].status_next = rand() % 2;
+		cells[x + i][y + 3].status_next = rand() % 2;
 
-		plug->cells[x - 3][y + i].status_next = rand() % 2;
-		plug->cells[x + 3][y + i].status_next = rand() % 2;
+		cells[x - 3][y + i].status_next = rand() % 2;
+		cells[x + 3][y + i].status_next = rand() % 2;
 
-		plug->cells[x + i][y - 2].status_next = rand() % 2;
-		plug->cells[x + i][y + 2].status_next = rand() % 2;
+		cells[x + i][y - 2].status_next = rand() % 2;
+		cells[x + i][y + 2].status_next = rand() % 2;
 
-		plug->cells[x - 2][y + i].status_next = rand() % 2;
-		plug->cells[x + 2][y + i].status_next = rand() % 2;
+		cells[x - 2][y + i].status_next = rand() % 2;
+		cells[x + 2][y + i].status_next = rand() % 2;
 
-		plug->cells[x + i][y - 1].status_next = rand() % 2;
-		plug->cells[x + i][y + 1].status_next = rand() % 2;
+		cells[x + i][y - 1].status_next = rand() % 2;
+		cells[x + i][y + 1].status_next = rand() % 2;
 
-		plug->cells[x - 1][y + i].status_next = rand() % 2;
-		plug->cells[x + 1][y + i].status_next = rand() % 2;
+		cells[x - 1][y + i].status_next = rand() % 2;
+		cells[x + 1][y + i].status_next = rand() % 2;
 
-		plug->cells[x + i][y].status_next = rand() % 2;
-		plug->cells[x][y + i].status_next = rand() % 2;
+		cells[x + i][y].status_next = rand() % 2;
+		cells[x][y + i].status_next = rand() % 2;
 	}
 }

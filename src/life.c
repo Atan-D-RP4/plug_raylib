@@ -10,7 +10,7 @@
 #include "rlgl.h"
 
 #define CELL_IMPLEMENTATION
-#include "include/cell.h"
+#include "cell.h"
 #include "include/plug.h"
 
 extern Color COLOR_BACKGROUND;
@@ -20,61 +20,64 @@ extern Color COLOR_ALIVE;
 static Plug *plug = NULL;
 
 void plug_update() {
+
 	BeginDrawing();
+	{
+		ClearBackground(COLOR_BACKGROUND);
 
-	ClearBackground(COLOR_BACKGROUND);
+		int cellWidth = plug->windowWidth / plug->cols;
+		int cellHeight = plug->windowHeight / plug->rows;
 
-	int cellWidth = plug->windowWidth / plug->cols;
-	int cellHeight = plug->windowHeight / plug->rows;
+		if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+			int x = GetMouseX() / cellWidth;
+			int y = GetMouseY() / cellHeight;
+			// Check if x and y are within the bounds of the grid
+			if (x >= 0 && x < plug->cols && y >= 0 && y < plug->rows)
+				plug->cells[x][y].status_next = !plug->cells[x][y].status_next;
+		}
 
-	if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-		int x = GetMouseX() / cellWidth;
-		int y = GetMouseY() / cellHeight;
-		// Check if x and y are within the bounds of the grid
-		if (x >= 0 && x < plug->cols && y >= 0 && y < plug->rows)
-			plug->cells[x][y].status_next = !plug->cells[x][y].status_next;
-	}
+		if (IsKeyPressed(KEY_SPACE)) {
+			plug->playing = !plug->playing;
+		}
 
-	if (IsKeyPressed(KEY_SPACE)) {
-		plug->playing = !plug->playing;
-	}
-
-	if (IsKeyPressed(KEY_C)) {
-		for (int i = 0; i < plug->cols; i++) {
-			for (int j = 0; j < plug->rows; j++) {
-				plug->cells[i][j].status_next = DEAD;
+		if (IsKeyPressed(KEY_C)) {
+			for (int i = 0; i < plug->cols; i++) {
+				for (int j = 0; j < plug->rows; j++) {
+					plug->cells[i][j].status_next = DEAD;
+				}
 			}
 		}
-	}
 
-	if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_C)) {
-		system("clear");
-	}
+		if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_C)) {
+			system("clear");
+		}
 
-	if (IsKeyPressed(KEY_G)) {
-		for (int i = 0; i < plug->cols; i++) {
-			for (int j = 0; j < plug->rows; j++) {
-				plug->cells[i][j].status_next = rand() % 2;
+		if (IsKeyPressed(KEY_G)) {
+			for (int i = 0; i < plug->cols; i++) {
+				for (int j = 0; j < plug->rows; j++) {
+					plug->cells[i][j].status_next = rand() % 2;
+				}
 			}
 		}
+
+		if (IsKeyDown(KEY_P)) create_pulsar(plug->cells, plug->cols, plug->rows);
+
+		if (IsKeyDown(KEY_O)) rand_square(plug->cells, plug->cols, plug->rows);
+
+		if (IsKeyDown(KEY_I)) rand_square2(plug->cells, plug->cols, plug->rows);
+
+		if (IsKeyPressed(KEY_W)) create_gun(plug->cells, plug->cols, plug->rows);
+
+		DrawFrame(plug->cells, plug->cols, plug->rows,
+				plug->windowWidth, plug->windowHeight);
 	}
-
-	if (IsKeyDown(KEY_P)) create_pulsar(plug);
-
-	if (IsKeyDown(KEY_O)) rand_square(plug);
-
-	if (IsKeyDown(KEY_I)) rand_square2(plug);
-
-	if (IsKeyPressed(KEY_W)) create_gun(plug);
-
-	DrawFrame(plug);
 	EndDrawing();
 
 	if (!plug->playing) {
 		return;
 	}
 
-	update_cells(plug);
+	update_cells(plug->cells, plug->cols, plug->rows);
 }
 
 void plug_init(void) {

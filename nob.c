@@ -8,9 +8,12 @@
 #define SRC_DIR "./src"
 #define BUILD_DIR "./build"
 
+bool build_raylib();
+
 bool build_life(Nob_Cmd *cmd);
 bool build_bezier(Nob_Cmd *cmd);
 bool build_imager(Nob_Cmd *cmd);
+bool build_cube(Nob_Cmd *cmd);
 
 bool build_game(Nob_Cmd *cmd);
 
@@ -22,9 +25,6 @@ const char *out_file = BUILD_DIR"/main";
 
 Nob_String_View CFLAGS_ARR[] = {
 	(Nob_String_View) { .data = "-Wall", .count = 5 },
-	(Nob_String_View) { .data = "-Wextra", .count = 7 },
-	(Nob_String_View) { .data = "-Werror", .count = 7 },
-	(Nob_String_View) { .data = "-pedantic", .count = 9 },
 	(Nob_String_View) { .data = "-std=c2x", .count = 8 },
 	(Nob_String_View) { .data = "-ggdb", .count = 5 },
 	(Nob_String_View) { .data = "-Wno-unused-parameter", .count = 20 },
@@ -32,10 +32,12 @@ Nob_String_View CFLAGS_ARR[] = {
 
 Nob_String_View LDFLAGS_ARR[] = {
 	(Nob_String_View) { .data = "-I./", .count = 12 },
-	(Nob_String_View) { .data = "-I./raylib/include/", .count = 18 },
-	(Nob_String_View) { .data = "./raylib/lib/libraylib.so.5.0.0", .count = 30 },
+	(Nob_String_View) { .data = "-I./raylib/src", .count = 18 },
+	//(Nob_String_View) { .data = "./raylib_t/lib/libraylib.so.5.0.0", .count = 30 },
+	(Nob_String_View) { .data = "./build/raylib/libraylib.so.5.0.0", .count = 30 },
 	(Nob_String_View) { .data = "-lm", .count = 3 },
-	(Nob_String_View) { .data = "-Wl,-rpath=./raylib/lib", .count = 21 },
+	//(Nob_String_View) { .data = "-Wl,-rpath=./raylib_t/lib", .count = 21 },
+	(Nob_String_View) { .data = "-Wl,-rpath=./build/raylib/", .count = 21 },
 };
 
 Nob_String_View PLUGFLAGS_ARR[] = {
@@ -77,11 +79,13 @@ int main(int argc, char **argv) {
 	if (strcmp(subcmd, "build") == 0) {
 
 		nob_mkdir_if_not_exists("./build");
+		build_raylib();
 
 		cmd.count = 0;
 		if (!build_bezier(&cmd)) return 1;
 		if (!build_life(&cmd)) return 1;
 		if (!build_imager(&cmd)) return 1;
+		if (!build_cube(&cmd)) return 1;
 
 		if (!build_game(&cmd)) return 1;;
 
@@ -93,6 +97,10 @@ int main(int argc, char **argv) {
 	} else if (strcmp(subcmd, "run") == 0) {
 
 		nob_mkdir_if_not_exists("./build");
+		if (!nob_file_exists("./build/raylib")) {
+			build_raylib();
+			return 1;
+		}
 
 		nob_log(NOB_INFO, "Application: %s", argv[0]);
 
@@ -100,6 +108,7 @@ int main(int argc, char **argv) {
 		if (!build_life(&cmd)) return 1;
 		if (!build_bezier(&cmd)) return 1;
 		if (!build_imager(&cmd)) return 1;
+		if (!build_cube(&cmd)) return 1;
 
 		if (!build_game(&cmd)) return 1;;
 
@@ -112,15 +121,6 @@ int main(int argc, char **argv) {
 		if (!nob_cmd_run_sync(cmd)) return 1;
 		nob_log(NOB_INFO, "--------------------------------------------------");
 
-		cmd.count = 0;
-		if (!nob_file_exists(BUILD_DIR)) return 1;
-		nob_cmd_append(&cmd, "rm", "-r");
-		nob_cmd_append(&cmd, BUILD_DIR);
-		if (!nob_cmd_run_sync(cmd)) return 1;
-
-		nob_log(NOB_INFO, "Cleaned");
-		nob_log(NOB_INFO, "--------------------------------------------------");
-
 		return 0;
 
 	} else if (strcmp(subcmd, "reload") == 0) {
@@ -128,6 +128,7 @@ int main(int argc, char **argv) {
 			if (!build_life(&cmd)) return 1;
 			if (!build_bezier(&cmd)) return 1;
 			if (!build_imager(&cmd)) return 1;
+			if (!build_cube(&cmd)) return 1;
 
 			nob_log(NOB_INFO, "--------------------------------------------------");
 			nob_log(NOB_INFO, "Rebuilt plug");
@@ -160,6 +161,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	nob_cmd_free(cmd);
 	return 0;
 }
 
@@ -268,4 +270,106 @@ bool build_imager(Nob_Cmd *cmd) {
 	}
 
 	return nob_cmd_run_sync(*cmd);
+}
+
+bool build_cube(Nob_Cmd *cmd) {
+
+	if (!nob_file_exists(SRC_DIR"/cube.c"))	return 1;
+
+	cmd->count = 0;
+	nob_cmd_append(cmd, compile_cmd);
+
+	nob_cmd_append(cmd, "-o", BUILD_DIR"/libcube.so");
+	nob_cmd_append(cmd, SRC_DIR"/cube.c");
+
+	for (int i = 0; i < NOB_ARRAY_LEN(CFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, CFLAGS_ARR[i].data);
+	}
+
+	for (int i = 0; i < NOB_ARRAY_LEN(PLUGFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, PLUGFLAGS_ARR[i].data);
+	}
+
+	for (int i = 0; i < NOB_ARRAY_LEN(LDFLAGS_ARR); i++) {
+		nob_cmd_append(cmd, LDFLAGS_ARR[i].data);
+	}
+
+	return nob_cmd_run_sync(*cmd);
+}
+
+bool build_raylib() {
+	bool error = false;
+	const char* compiler = "cc";
+	Nob_String_View SRC_FILES[] = {
+		(Nob_String_View) { .data = "./raylib/src/rcore.c", .count = 24 },
+		(Nob_String_View) { .data = "./raylib/src/rmodels.c", .count = 26 },
+		(Nob_String_View) { .data = "./raylib/src/raudio.c", .count = 25 },
+		(Nob_String_View) { .data = "./raylib/src/rglfw.c", .count = 24 },
+		(Nob_String_View) { .data = "./raylib/src/rshapes.c", .count = 26 },
+		(Nob_String_View) { .data = "./raylib/src/rtext.c", .count = 24 },
+		(Nob_String_View) { .data = "./raylib/src/rtextures.c", .count = 28 },
+		(Nob_String_View) { .data = "./raylib/src/utils.c", .count = 25 },
+	};
+
+	Nob_String_View OUT_FILES[] = {
+		(Nob_String_View) { .data = "./build/raylib/rcore.o", .count = 24 },
+		(Nob_String_View) { .data = "./build/raylib/rmodels.o", .count = 26 },
+		(Nob_String_View) { .data = "./build/raylib/raudio.o", .count = 25 },
+		(Nob_String_View) { .data = "./build/raylib/rglfw.o", .count = 24 },
+		(Nob_String_View) { .data = "./build/raylib/rshapes.o", .count = 26 },
+		(Nob_String_View) { .data = "./build/raylib/rtext.o", .count = 24 },
+		(Nob_String_View) { .data = "./build/raylib/rtextures.o", .count = 28 },
+		(Nob_String_View) { .data = "./build/raylib/utils.o", .count = 25 },
+	};
+
+	nob_log(NOB_INFO, "--------------------------------------------------");
+	nob_log(NOB_INFO, "Building raylib");
+
+	if (!nob_file_exists("./build/raylib"))
+		nob_mkdir_if_not_exists("./build/raylib");
+	else
+		return true;
+
+	Nob_Cmd cmd = { 0 };
+	for (size_t i = 0; i < NOB_ARRAY_LEN(SRC_FILES); i++) {
+		cmd.count = 0;
+		nob_cmd_append(&cmd, compiler);
+		for (int j = 0; j < NOB_ARRAY_LEN(CFLAGS_ARR); j++) {
+			nob_cmd_append(&cmd, CFLAGS_ARR[j].data);
+		}
+		nob_cmd_append(&cmd, "-I./");
+		nob_cmd_append(&cmd, "-I./raylib/src");
+		nob_cmd_append(&cmd, "-I./raylib/src/external/glfw/include");
+		nob_cmd_append(&cmd, "-DPLATFORM_DESKTOP", "-DGRAPHICS_API_OPENGL_33");
+		nob_cmd_append(&cmd, "-D_GLFW_X11", "-DSUPPORT_FILEFORMAT_FLAC=1");
+		nob_cmd_append(&cmd, "-fPIC");
+		nob_cmd_append(&cmd, "-c", SRC_FILES[i].data);
+		nob_cmd_append(&cmd, "-o", OUT_FILES[i].data);
+		if (!nob_cmd_run_sync(cmd)) {
+			error = true;
+			break;
+		}
+	}
+
+	// Build a shared library
+	cmd.count = 0;
+	nob_cmd_append(&cmd, compiler);
+	for (int j = 0; j < NOB_ARRAY_LEN(CFLAGS_ARR); j++) {
+		nob_cmd_append(&cmd, CFLAGS_ARR[j].data);
+	}
+	nob_cmd_append(&cmd, "-shared");
+	nob_cmd_append(&cmd, "-o", "./build/raylib/libraylib.so.5.0.0");
+	for (size_t i = 0; i < NOB_ARRAY_LEN(OUT_FILES); i++) {
+		nob_cmd_append(&cmd, OUT_FILES[i].data);
+	}
+
+	if (!nob_cmd_run_sync(cmd)) {
+		error = true;
+	}
+
+	nob_log(NOB_INFO, "Successfully built raylib");
+	nob_log(NOB_INFO, "--------------------------------------------------");
+
+	nob_cmd_free(cmd);
+	return !error;
 }

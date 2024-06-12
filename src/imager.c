@@ -12,7 +12,15 @@
 
 #include "include/plug.h"
 #include "include/nob.h"
-#include "include/perlin.h"
+#include "perlin.h"
+
+typedef struct {
+	Camera2D camera;
+	Vector2 GLOBAL_FLOW;
+	Vector2 top_left;
+	Vector2 bottom_right;
+	Particle particles[PARTICLE_COUNT];
+} Plug;
 
 static Plug *plug = NULL;
 
@@ -77,10 +85,12 @@ void plug_update (void) {
 	BeginMode2D(plug->camera);
 	{
 		// Semi-transparent background
-		DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, 0.05f));
-
+		/*
+		   DrawRectangleV(plug->top_left, (Vector2) { POINTS_X * SCALE, POINTS_Y * SCALE }, Fade(BLACK, 0.05f));
+		   DrawFlowField(plug->GLOBAL_FLOW, POINTS_X, POINTS_Y, SCALE, WHITE);
+		   ClearBackground(BLACK);
+		 */
 		DrawParticles(plug->GLOBAL_FLOW, plug->particles, PARTICLE_COUNT, plug->top_left, plug->bottom_right, SCALE, BLUE);
-		// DrawFlowField(plug->GLOBAL_FLOW, POINTS_X, POINTS_Y, SCALE, WHITE);
 	}
 	EndMode2D();
 	EndDrawing();
@@ -112,3 +122,4 @@ void plug_free(void) {
 	TraceLog(LOG_INFO, "Plug Freed");
 	TraceLog(LOG_INFO, "--------------------------------------------------");
 }
+
