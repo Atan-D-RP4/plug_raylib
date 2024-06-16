@@ -89,8 +89,12 @@ void plug_update (void) {
 		   DrawRectangleV(plug->top_left, (Vector2) { POINTS_X * SCALE, POINTS_Y * SCALE }, Fade(BLACK, 0.05f));
 		   DrawFlowField(plug->GLOBAL_FLOW, POINTS_X, POINTS_Y, SCALE, WHITE);
 		   ClearBackground(BLACK);
-		 */
-		DrawParticles(plug->GLOBAL_FLOW, plug->particles, PARTICLE_COUNT, plug->top_left, plug->bottom_right, SCALE, BLUE);
+		   */
+		DrawParticles(plug->GLOBAL_FLOW,
+				plug->particles, PARTICLE_COUNT,
+				plug->top_left, plug->bottom_right,
+				SCALE, BLUE
+			);
 	}
 	EndMode2D();
 	EndDrawing();

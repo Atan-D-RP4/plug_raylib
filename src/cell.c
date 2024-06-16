@@ -16,10 +16,8 @@ void DrawFrame(Cell **cells, int rows, int cols, int windowWidth, int windowHeig
 	for (int i = 0; i < cols; i++) {
 		for (int j = 0; j < rows; j++) {
 			if (cells[i][j].status_next == ALIVE)
-				DrawRectangle(i * cellWidth, j * cellHeight,
-						cellWidth, cellHeight, COLOR_ALIVE);
-			DrawRectangleLines(i * cellWidth, j * cellHeight,
-					cellWidth, cellHeight, COLOR_LINES);
+				DrawRectangle(i * cellWidth, j * cellHeight, cellWidth, cellHeight, BLUE);
+			DrawRectangleLines(i * cellWidth, j * cellHeight, cellWidth, cellHeight, GREEN);
 			cells[i][j].status_prev = cells[i][j].status_next;
 		}
 	}

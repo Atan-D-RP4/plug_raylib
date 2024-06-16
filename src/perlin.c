@@ -8,14 +8,14 @@
 
 Vector2 getNoiseGradient(Vector2 pos, Vector2 global_flow, float offset) {
 	Vector2 gradient;
-	float angle = 0.0007f;
+	float angle = 0.0006f;
 	offset = GetFrameTime() * 0.5f;
 
 	float noise = stb_perlin_noise3(pos.x * angle + offset, pos.y * angle, 1.0f, 0, 0, 0);
 	noise = noise * PI * 2.0f;
 
-	gradient.x = cos(noise) * 6.5f;
-	gradient.y = sin(noise) * 6.0f;
+	gradient.x = cos(noise) * 2.0f;
+	gradient.y = sin(noise) * 2.0f;
 
 	gradient = Vector2Add(gradient, global_flow);
 	gradient = Vector2Normalize(gradient);
@@ -56,10 +56,10 @@ void DrawParticles(Vector2 global_flow, Particle *particles, size_t count, Vecto
 			particles[i].velocity = getNoiseGradient(particles[i].position, global_flow, 0.0f);
 			particles[i].velocity = Vector2Scale(particles[i].velocity, scale);
 			particles[i].velocity = Vector2Add(particles[i].velocity,
-					(Vector2){
-					GetRandomValue(-1000.0f, 1000.0f),
-					GetRandomValue(-1000.0f, 1000.0f)
-					});
+									(Vector2) {
+										GetRandomValue(-1000.0f, 1000.0f),
+										GetRandomValue(-1000.0f, 1000.0f)
+									});
 		}
 		initialized = 1;
 	}
@@ -69,11 +69,13 @@ void DrawParticles(Vector2 global_flow, Particle *particles, size_t count, Vecto
 		Particle *particle = &particles[i];
 		Vector2 gradient = getNoiseGradient(particle->position, global_flow, 0.0f);
 		float angle = Vector2Angle(gradient, particle->velocity);
-		color = ColorFromNormalized((Vector4) {
-				gradient.x,
-				gradient.y,
-				angle,
-				1.3f });
+		color = ColorFromNormalized(
+				(Vector4) {
+					gradient.x,
+					gradient.y,
+					angle,
+					1.1f
+				});
 		DrawCircleV(particle->position, RADIUS, color);
 		particle->position = Vector2Add(particle->position, particle->velocity);
 		particle->velocity = Vector2Scale(gradient, scale);
@@ -95,10 +97,10 @@ void DrawParticles(Vector2 global_flow, Particle *particles, size_t count, Vecto
 			particle->velocity = getNoiseGradient(particle->position, global_flow, 0.0f);
 			particle->velocity = Vector2Scale(particle->velocity, scale);
 			particle->velocity = Vector2Add(particle->velocity,
-					(Vector2) {
-					GetRandomValue(-1000.0f, 1000.0f),
-					GetRandomValue(-1000.0f, 1000.0f)
-					});
+								(Vector2) {
+										GetRandomValue(-1000.0f, 1000.0f),
+										GetRandomValue(-1000.0f, 1000.0f)
+								 });
 		}
 	}
 }

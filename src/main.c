@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "raylib.h"
@@ -11,7 +12,7 @@
 #include "include/plug.h"
 
 int ScreenWidth  = 800;
-int ScreenHeight = 600;
+int ScreenHeight = 800;
 
 int main(int argc, char **argv) {
 
@@ -23,14 +24,30 @@ int main(int argc, char **argv) {
 	char* libplug_path = argv[1];
 	set_libplug_path(libplug_path);
 
+	char *title = NULL;
+	if (strcmp(libplug_path, "./build/liblife.so") == 0) {
+		printf("Game Of Life\n");
+		title = "Game Of Life";
+	} else if (strcmp(libplug_path, "./build/libcube.so") == 0) {
+		printf("Cubes\n");
+		title = "Cubes";
+	} else if (strcmp(libplug_path, "./build/libimager.so") == 0) {
+		printf("Imager\n");
+		title = "Flow Fields";
+	} else if (strcmp(libplug_path, "./build/libbezier.so") == 0) {
+		printf("Bezier Curves\n");
+		title = "Bezier Curves";
+	} else {
+		printf("Experimental\n");
+		title = "Experimental";
+	}
+
 	TraceLog(LOG_INFO, "--------------------------------------------------");
 	if (!reload_libplug()) return 1;
 	TraceLog(LOG_INFO, "--------------------------------------------------");
 
-
-	InitWindow(ScreenWidth, ScreenHeight, "Game Of Life");
+	InitWindow(ScreenWidth, ScreenHeight, title);
 	srand(time(NULL));
-	SetWindowTitle("Game Of Life");
 	SetTargetFPS(60);
 
 
@@ -50,3 +67,4 @@ int main(int argc, char **argv) {
 	CloseWindow();
 	return 0;
 }
+

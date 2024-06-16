@@ -14,8 +14,6 @@
 #include "include/plug.h"
 
 extern Color COLOR_BACKGROUND;
-extern Color COLOR_LINES;
-extern Color COLOR_ALIVE;
 
 static Plug *plug = NULL;
 
