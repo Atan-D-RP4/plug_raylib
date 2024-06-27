@@ -20,6 +20,39 @@ typedef struct {
 
 static Plug *plug = NULL;
 
+void DrawPlaneXZ(Vector3 centerPos, Vector2 size, Color color)
+{
+	DrawPlane(centerPos, size, color);
+}
+
+// Might want to add this to raylib
+void DrawPlaneXY(Vector3 centerPos, Vector2 size, Color color)
+{
+	// Draw rectangle
+	rlPushMatrix();
+		rlCheckRenderBatchLimit(4);
+		rlSetTexture(rlGetTextureIdDefault());
+
+		rlBegin(RL_QUADS);
+			rlColor4ub(color.r, color.g, color.b, color.a);
+
+			rlNormal3f(0.0f, 0.0f, 1.0f);
+
+			rlTexCoord2f(0.0f, 0.0f);
+			rlVertex3f(centerPos.x - size.x/2, centerPos.y - size.y/2, centerPos.z);
+
+			rlTexCoord2f(1.0f, 0.0f);
+			rlVertex3f(centerPos.x + size.x/2, centerPos.y - size.y/2, centerPos.z);
+
+			rlTexCoord2f(1.0f, 1.0f);
+			rlVertex3f(centerPos.x + size.x/2, centerPos.y + size.y/2, centerPos.z);
+
+			rlTexCoord2f(0.0f, 1.0f);
+			rlVertex3f(centerPos.x - size.x/2, centerPos.y + size.y/2, centerPos.z);
+		rlEnd();
+	rlPopMatrix();
+}
+
 void plug_init(void) {
 	srand(time(NULL));
 	TraceLog(LOG_INFO, "Plug Init");
@@ -46,6 +79,8 @@ void plug_init(void) {
 
 void plug_update (void) {
 
+	// TODO: Do something about the shitty camera controls
+	// - https://www.reddit.com/r/raylib/comments/109gsqk/custom_3d_camera_system/
 	UpdateCameraPro(&plug->camera,
 			(Vector3) {
 			(IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))*0.1f -      // Move forward-backward
@@ -77,9 +112,13 @@ void plug_update (void) {
 					for (int z = -1; z < 2; z++) {
 						if (x == 0 && y == 0 && z == 0) continue;
 						// assign color based on faces
-						DrawPlane(
+						DrawPlaneXZ(
 								(Vector3) { x*cube_size + x*padding, y*cube_size + y*padding, z*cube_size + z*padding },
 								(Vector2) { cube_size, cube_size }, colors[1]
+								);
+						DrawPlaneXY(
+								(Vector3) { x*cube_size + x*padding, y*cube_size + y*padding, z*cube_size + z*padding },
+								(Vector2) { cube_size, cube_size }, colors[2]
 								);
 					}
 				}
