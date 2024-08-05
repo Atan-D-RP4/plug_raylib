@@ -40,6 +40,8 @@ Nob_String_View LDFLAGS_ARR[] = {
 	//(Nob_String_View) { .data = "./raylib_t/lib/libraylib.so.5.0.0", .count = 30 },
 	(Nob_String_View) { .data = "./build/libraylib.so.5.0.0", .count = 30 },
 	(Nob_String_View) { .data = "-lm", .count = 3 },
+	(Nob_String_View) { .data = "-ldl", .count = 4 },
+	(Nob_String_View) { .data = "-lpthread", .count = 9 },
 	//(Nob_String_View) { .data = "-Wl,-rpath=./raylib_t/lib", .count = 21 },
 	(Nob_String_View) { .data = "-Wl,-rpath=./build/", .count = 21 },
 };
@@ -328,7 +330,7 @@ bool build_cube(Nob_Cmd *cmd) {
 
 bool build_raylib() {
 	bool error = false;
-	const char* compiler = "cc";
+	const char* compiler = compile_cmd;
 	Nob_String_View SRC_FILES[] = {
 		(Nob_String_View) { .data = "./raylib/src/rcore.c", .count = 24 },
 		(Nob_String_View) { .data = "./raylib/src/rmodels.c", .count = 26 },
@@ -386,7 +388,7 @@ bool build_raylib() {
 		nob_cmd_append(&cmd, CFLAGS_ARR[j].data);
 	}
 	nob_cmd_append(&cmd, "-shared");
-	nob_cmd_append(&cmd, "-o", "./build/libraylib.so.5.0.0");//
+	nob_cmd_append(&cmd, "-o", "./build/libraylib.so.5.0.0");
 	for (size_t i = 0; i < NOB_ARRAY_LEN(OUT_FILES); i++) {
 		nob_cmd_append(&cmd, OUT_FILES[i].data);
 	}
