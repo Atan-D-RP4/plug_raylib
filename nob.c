@@ -7,6 +7,7 @@
 
 #define SRC_DIR "./src"
 #define BUILD_DIR "./build"
+#define RAYLIB_SRC_DIR "./raylib/src"
 
 bool build_raylib();
 
@@ -27,11 +28,10 @@ Nob_String_View CFLAGS_ARR[] = {
 	(Nob_String_View) { .data = "-O3", .count = 3 },
 	(Nob_String_View) { .data = "-Wall", .count = 5 },
 	(Nob_String_View) { .data = "-Wextra", .count = 7 },
-	(Nob_String_View) { .data = "-Werror", .count = 7 },
-	(Nob_String_View) { .data = "-pedantic", .count = 9 },
-	(Nob_String_View) { .data = "-std=c2x", .count = 8 },
-	(Nob_String_View) { .data = "-ggdb", .count = 5 },
 	(Nob_String_View) { .data = "-Wno-unused-parameter", .count = 20 },
+	(Nob_String_View) { .data = "-pedantic", .count = 9 },
+	(Nob_String_View) { .data = "-std=c11", .count = 8 },
+	(Nob_String_View) { .data = "-ggdb", .count = 5 },
 };
 
 Nob_String_View LDFLAGS_ARR[] = {
@@ -332,31 +332,31 @@ bool build_raylib() {
 	bool error = false;
 	const char* compiler = compile_cmd;
 	Nob_String_View SRC_FILES[] = {
-		(Nob_String_View) { .data = "./raylib/src/rcore.c", .count = 24 },
-		(Nob_String_View) { .data = "./raylib/src/rmodels.c", .count = 26 },
-		(Nob_String_View) { .data = "./raylib/src/raudio.c", .count = 25 },
-		(Nob_String_View) { .data = "./raylib/src/rglfw.c", .count = 24 },
-		(Nob_String_View) { .data = "./raylib/src/rshapes.c", .count = 26 },
-		(Nob_String_View) { .data = "./raylib/src/rtext.c", .count = 24 },
-		(Nob_String_View) { .data = "./raylib/src/rtextures.c", .count = 28 },
-		(Nob_String_View) { .data = "./raylib/src/utils.c", .count = 25 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/rcore.c", .count = 24 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/rmodels.c", .count = 26 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/raudio.c", .count = 25 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/rglfw.c", .count = 24 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/rshapes.c", .count = 26 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/rtext.c", .count = 24 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/rtextures.c", .count = 28 },
+		(Nob_String_View) { .data = RAYLIB_SRC_DIR"/utils.c", .count = 25 },
 	};
 
 	Nob_String_View OUT_FILES[] = {
-		(Nob_String_View) { .data = "./build/rcore.o", .count = 24 },
-		(Nob_String_View) { .data = "./build/rmodels.o", .count = 26 },
-		(Nob_String_View) { .data = "./build/raudio.o", .count = 25 },
-		(Nob_String_View) { .data = "./build/rglfw.o", .count = 24 },
-		(Nob_String_View) { .data = "./build/rshapes.o", .count = 26 },
-		(Nob_String_View) { .data = "./build/rtext.o", .count = 24 },
-		(Nob_String_View) { .data = "./build/rtextures.o", .count = 28 },
-		(Nob_String_View) { .data = "./build/utils.o", .count = 25 },
+		(Nob_String_View) { .data = BUILD_DIR"/rcore.o", .count = 24 },
+		(Nob_String_View) { .data = BUILD_DIR"/rmodels.o", .count = 26 },
+		(Nob_String_View) { .data = BUILD_DIR"/raudio.o", .count = 25 },
+		(Nob_String_View) { .data = BUILD_DIR"/rglfw.o", .count = 24 },
+		(Nob_String_View) { .data = BUILD_DIR"/rshapes.o", .count = 26 },
+		(Nob_String_View) { .data = BUILD_DIR"/rtext.o", .count = 24 },
+		(Nob_String_View) { .data = BUILD_DIR"/rtextures.o", .count = 28 },
+		(Nob_String_View) { .data = BUILD_DIR"/utils.o", .count = 25 },
 	};
 
-	if (nob_file_exists("./build/libraylib.so.5.0.0"))
+	if (nob_file_exists(BUILD_DIR"/libraylib.so.5.0.0"))
 		return true;
 
-	nob_mkdir_if_not_exists("./build");
+	nob_mkdir_if_not_exists(BUILD_DIR);
 
 	nob_log(NOB_INFO, "--------------------------------------------------");
 	nob_log(NOB_INFO, "Building raylib");
@@ -368,8 +368,8 @@ bool build_raylib() {
 		nob_cmd_append(&cmd, "-O3", "-Wall");
 		nob_cmd_append(&cmd, "-ggdb");
 		nob_cmd_append(&cmd, "-std=c2x");
-		nob_cmd_append(&cmd, "-I./raylib/src");
-		nob_cmd_append(&cmd, "-I./raylib/src/external/glfw/include");
+		nob_cmd_append(&cmd, "-I"RAYLIB_SRC_DIR);
+		nob_cmd_append(&cmd, "-I"RAYLIB_SRC_DIR"/external/glfw/include");
 		nob_cmd_append(&cmd, "-DPLATFORM_DESKTOP", "-DGRAPHICS_API_OPENGL_33");
 		nob_cmd_append(&cmd, "-D_GLFW_X11", "-DSUPPORT_FILEFORMAT_FLAC=1");
 		nob_cmd_append(&cmd, "-fPIC");

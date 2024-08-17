@@ -9,6 +9,7 @@
 #include "raymath.h"
 #include "rlgl.h"
 
+#define NOB_IMPLEMENTATION
 #include "./include/nob.h"
 #include "./include/plug.h"
 
@@ -34,6 +35,48 @@ typedef struct {
 
 Plug *plug = NULL;
 
+int BinomialCoefficient(int n, int r) {
+	if (n < r || r < 0 || n < 0)
+		return -1;
+
+	if (r == 0 || r == n || n == 0) return 1;
+		return BinomialCoefficient(n - 1, r - 1) + BinomialCoefficient(n - 1, r);
+}
+
+void DrawNthBezierSpline(Vector2 *nodes, size_t nodes_count, float t, Color color) {
+	// Third degree Bezier spline
+		//for (size_t j = 0; j < nodes_count - 1; ++j) {
+		//	for (size_t i = 0, res = 500; i < res; ++i) {
+		//		float t = (float) i / res;
+		//		float it = 1 - t;
+		//		Vector2 p = Vector2Zero();
+		//		p = Vector2Add(p, Vector2Scale(nodes[j], it * it * it));
+		//		p = Vector2Add(p, Vector2Scale(nodes[j + 1 % nodes_count], 3 * it * it * t));
+		//		p = Vector2Add(p, Vector2Scale(nodes[j + 2 % nodes_count], 3 * it * t * t));
+		//		p = Vector2Add(p, Vector2Scale(nodes[j + 3 % nodes_count], t * t * t));
+		//		DrawPixelV(p, RED);
+		//	}
+		//}
+
+	// B(t) = Sum(i=0 to n) C(n, i) * (1 - t)^(n - i) * t^i * P(i)
+	if (nodes_count < 2) return;
+	if (nodes_count == 2) {
+		DrawLineV(nodes[0], nodes[1], color);
+		return;
+	}
+
+	for (size_t i = 0, res = 900; i < res; ++i) {
+		float t = (float) i / res;
+		Vector2 p = Vector2Zero();
+		for (size_t j = 0; j < nodes_count; ++j) {
+			float b = BinomialCoefficient(nodes_count - 1, j) * powf(1 - t, nodes_count - 1 - j) * powf(t, j);
+			p = Vector2Add(p, Vector2Scale(nodes[j], b));
+		}
+		DrawPixelV(p, color);
+	}
+
+}
+
 void CircleAnim(Vector2 pos, float radius, float thickness, Color color) {
 		Vector2 circle2Pos = Vector2Add(pos, (Vector2) { (50 + 25) * cosf(GetTime() * 1.5f), (50 + 25) * sinf(GetTime() * 1.5f) });
 		Vector2 circle3Pos = Vector2Add(circle2Pos, (Vector2) { (25 + 10) * cosf(GetTime() * 3.0f), (25 + 10) * sinf(GetTime() * 3.0f) });
@@ -53,8 +96,6 @@ void CircleAnim(Vector2 pos, float radius, float thickness, Color color) {
 		//	circle4Pos
 		//};
 		//DrawSplineBezierCubic(nodes2, 4, 0.5, RED);
-
-
 }
 
 void DrawSplineFrame(Vector2 *nodes, int nodes_count) {
@@ -145,11 +186,10 @@ void plug_update() {
 
 	if (IsKeyPressed(KEY_G)) TakeScreenshot("screenshot.png");
 
-	//	DrawDynCubes();
-
 	BeginDrawing();
 	BeginMode2D(plug->camera);
 	{
+		ClearBackground(BLACK);
 		if (GetTime() < 2.0) {
 			DrawText("Press Space to add a node", 10, 10, 20, WHITE);
 		}
@@ -182,23 +222,7 @@ void plug_update() {
 			}
 		}
 
-		//for (size_t j = 0; j < nodes_count - 1; ++j) {
-		//	for (size_t i = 0, res = 500; i < res; ++i) {
-		//		float t = (float) i / res;
-		//		float it = 1 - t;
-		//		Vector2 p = Vector2Zero();
-		//		p = Vector2Add(p, Vector2Scale(nodes[j], it * it * it));
-		//		p = Vector2Add(p, Vector2Scale(nodes[j + 1 % nodes_count], 3 * it * it * t));
-		//		p = Vector2Add(p, Vector2Scale(nodes[j + 2 % nodes_count], 3 * it * t * t));
-		//		p = Vector2Add(p, Vector2Scale(nodes[j + 3 % nodes_count], t * t * t));
-		//		DrawPixelV(p, RED);
-		//	}
-		//}
-
-		DrawSplineBezierCubic(plug->nodes.items, plug->nodes.count, 0.5, RED);
-
-		// CircleAnim(mouse, 100, 2, RED);
-
+		DrawNthBezierSpline(plug->nodes.items, plug->nodes.count, 0.5, WHITE);
 	}
 	EndMode2D();
 	EndDrawing();

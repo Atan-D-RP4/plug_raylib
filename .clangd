@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - "-I../"
+    - "-I../raylib/src"
+    - "-I../include"
+    - "-DHOT_RELOADABLE"

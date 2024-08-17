@@ -1,3 +1,5 @@
+*.png
 ./build
 nob.old
 nob
+./probe

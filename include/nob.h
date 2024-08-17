@@ -72,6 +72,8 @@ typedef enum {
     NOB_ERROR,
 } Nob_Log_Level;
 
+
+char *strsignal (int sig);
 void nob_log(Nob_Log_Level level, const char *fmt, ...);
 
 // It is an equivalent of shift command from bash. It basically pops a command line
@@ -733,10 +735,10 @@ Nob_File_Type nob_get_file_type(const char *path)
         return -1;
     }
 
-    switch (statbuf.st_mode & S_IFMT) {
-        case S_IFDIR:  return NOB_FILE_DIRECTORY;
-        case S_IFREG:  return NOB_FILE_REGULAR;
-        case S_IFLNK:  return NOB_FILE_SYMLINK;
+    switch (statbuf.st_mode & __S_IFMT) {
+        case __S_IFDIR:  return NOB_FILE_DIRECTORY;
+        case __S_IFREG:  return NOB_FILE_REGULAR;
+        case __S_IFLNK:  return NOB_FILE_SYMLINK;
         default:       return NOB_FILE_OTHER;
     }
 #endif // _WIN32

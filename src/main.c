@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
 	if (!reload_libplug()) return 1;
 	TraceLog(LOG_INFO, "--------------------------------------------------");
 
+	//SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(ScreenWidth, ScreenHeight, title);
 	srand(time(NULL));
 	SetTargetFPS(60);
