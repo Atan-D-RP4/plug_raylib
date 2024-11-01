@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <stdint.h> // for intptr_t
 #include <stdbool.h>
+#include <stdio.h>
 
 #define PLUGS_LIST \
     PLUG(plug_init, void, void) \
@@ -17,12 +18,13 @@ PLUGS_LIST
 #undef PLUG
 #endif // PLUG_H_
 
+// #define PLUG_IMPLEMENTATION -- Uncomment for highlighting
 #ifdef PLUG_IMPLEMENTATION
 
 char *libplug_file_name;
 void *libplug = NULL;
 
-void set_libplug_path(char *file_name) {
+inline void set_libplug_path(char *file_name) {
     libplug_file_name = file_name;
 }
 
@@ -36,7 +38,7 @@ void set_libplug_path(char *file_name) {
     PLUGS_LIST
     #undef PLUG
 
-bool reload_libplug(void) {
+inline bool reload_libplug(void) {
     fprintf(stdout, "Loading %s\n", libplug_file_name);
     if (libplug != NULL) {
         dlclose(libplug);

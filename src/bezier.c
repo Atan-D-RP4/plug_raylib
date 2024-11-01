@@ -33,9 +33,9 @@ typedef struct {
 	Vector2Array trail;
 } Plug;
 
-Plug *plug = NULL;
+static Plug *plug = NULL;
 
-int BinomialCoefficient(int n, int r) {
+static inline int BinomialCoefficient(int n, int r) {
 	if (n < r || r < 0 || n < 0)
 		return -1;
 
@@ -43,7 +43,7 @@ int BinomialCoefficient(int n, int r) {
 		return BinomialCoefficient(n - 1, r - 1) + BinomialCoefficient(n - 1, r);
 }
 
-void DrawNthBezierSpline(Vector2 *nodes, size_t nodes_count, float t, Color color) {
+static inline void DrawNthBezierSpline(Vector2 *nodes, size_t nodes_count, Color color) {
 	// Third degree Bezier spline
 		//for (size_t j = 0; j < nodes_count - 1; ++j) {
 		//	for (size_t i = 0, res = 500; i < res; ++i) {
@@ -66,10 +66,10 @@ void DrawNthBezierSpline(Vector2 *nodes, size_t nodes_count, float t, Color colo
 	}
 
 	for (size_t i = 0, res = 900; i < res; ++i) {
-		float t = (float) i / res;
+		float t = (float) i / (float) res;
 		Vector2 p = Vector2Zero();
 		for (size_t j = 0; j < nodes_count; ++j) {
-			float b = BinomialCoefficient(nodes_count - 1, j) * powf(1 - t, nodes_count - 1 - j) * powf(t, j);
+			float b = (float) BinomialCoefficient(nodes_count - 1, (int) j) * powf(1 - t, (float) (nodes_count - 1 - j)) * powf(t, (float) j);
 			p = Vector2Add(p, Vector2Scale(nodes[j], b));
 		}
 		DrawPixelV(p, color);
@@ -77,7 +77,7 @@ void DrawNthBezierSpline(Vector2 *nodes, size_t nodes_count, float t, Color colo
 
 }
 
-void CircleAnim(Vector2 pos, float radius, float thickness, Color color) {
+static inline void CircleAnim(Vector2 pos, Color color) {
 		Vector2 circle2Pos = Vector2Add(pos, (Vector2) { (50 + 25) * cosf(GetTime() * 1.5f), (50 + 25) * sinf(GetTime() * 1.5f) });
 		Vector2 circle3Pos = Vector2Add(circle2Pos, (Vector2) { (25 + 10) * cosf(GetTime() * 3.0f), (25 + 10) * sinf(GetTime() * 3.0f) });
 		Vector2 circle4Pos = Vector2Add(circle3Pos, (Vector2) { (10 + 5) * cosf(GetTime() * 6.0f), (10 + 5) * sinf(GetTime() * 6.0f) });
@@ -87,7 +87,7 @@ void CircleAnim(Vector2 pos, float radius, float thickness, Color color) {
 		//DrawCircleLinesV(circle2Pos, 25, GREEN);
 		//DrawCircleLinesV(circle3Pos, 10, BLUE);
 		//DrawCircleLinesV(circle4Pos, 5, VIOLET);
-		DrawPixelV(circle5Pos, RED);
+		DrawPixelV(circle5Pos, color);
 
 		//Vector2 nodes2[4] = {
 		//	pos,
@@ -98,7 +98,7 @@ void CircleAnim(Vector2 pos, float radius, float thickness, Color color) {
 		//DrawSplineBezierCubic(nodes2, 4, 0.5, RED);
 }
 
-void DrawSplineFrame(Vector2 *nodes, int nodes_count) {
+static inline void DrawSplineFrame(Vector2 *nodes, int nodes_count) {
 	DrawLineV(Vector2Lerp(nodes[0], nodes[1], 0.5), Vector2Lerp(nodes[1], nodes[2], 0.5), WHITE);
 	DrawLineV(Vector2Lerp(nodes[1], nodes[2], 0.5), Vector2Lerp(nodes[2], nodes[3], 0.5), WHITE);
 	DrawLineV(Vector2Lerp(Vector2Lerp(nodes[0], nodes[1], 0.5), Vector2Lerp(nodes[1], nodes[2], 0.5), 0.5), Vector2Lerp(Vector2Lerp(nodes[1], nodes[2], 0.5), Vector2Lerp(nodes[2], nodes[3], 0.5), 0.5), WHITE);
@@ -111,7 +111,7 @@ void DrawSplineFrame(Vector2 *nodes, int nodes_count) {
 
 }
 
-void DrawDynCubes(void) {
+static inline void DrawDynCubes(void) {
 	Camera2D camera = {
 		.zoom = 1.0,
 		.offset = {
@@ -222,7 +222,7 @@ void plug_update() {
 			}
 		}
 
-		DrawNthBezierSpline(plug->nodes.items, plug->nodes.count, 0.5, WHITE);
+		DrawNthBezierSpline(plug->nodes.items, plug->nodes.count, WHITE);
 	}
 	EndMode2D();
 	EndDrawing();

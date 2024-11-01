@@ -1,11 +1,9 @@
-#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
 #include "raylib.h"
-#include "raymath.h"
 #include "rlgl.h"
 
 #define PLUG_IMPLEMENTATION

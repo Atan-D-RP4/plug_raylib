@@ -1,9 +1,10 @@
-#include <stdlib.h>
 #include "raylib.h"
 #include "raymath.h"
 #include "rlgl.h"
 
 #include "cell.h"
+
+#include <stdlib.h>
 
 const Color COLOR_BACKGROUND = { 245, 245, 245, 255 }; // WHITE
 const Color COLOR_LINES = { 0, 0, 0, 255 }; // BLACK
@@ -129,6 +130,7 @@ void rand_square2(Cell **cells, int rows, int cols) {
 	int x = GetMouseX() / (GetScreenWidth() / cols);
 	int y = GetMouseY() / (GetScreenHeight() / rows);
 
+	// Ensure the pulsar fits in the grid
 	for (int i = -4; i < 5; i++) {
 		// Ensure each of the access points exist in the grid
 		if (x + i < 0 || x + i >= cols || y + i < 0 || y + i >= rows) continue;

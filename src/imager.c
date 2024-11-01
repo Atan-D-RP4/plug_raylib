@@ -94,7 +94,7 @@ void plug_update (void) {
 				plug->particles, PARTICLE_COUNT,
 				plug->top_left, plug->bottom_right,
 				SCALE, BLUE
-			);
+				);
 	}
 	EndMode2D();
 	EndDrawing();
