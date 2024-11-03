@@ -24,7 +24,7 @@ PLUGS_LIST
 char *libplug_file_name;
 void *libplug = NULL;
 
-inline void set_libplug_path(char *file_name) {
+static inline void set_libplug_path(char *file_name) {
     libplug_file_name = file_name;
 }
 
@@ -38,7 +38,7 @@ inline void set_libplug_path(char *file_name) {
     PLUGS_LIST
     #undef PLUG
 
-inline bool reload_libplug(void) {
+static inline bool reload_libplug(void) {
     fprintf(stdout, "Loading %s\n", libplug_file_name);
     if (libplug != NULL) {
         dlclose(libplug);
